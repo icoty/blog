@@ -3,11 +3,11 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: 唯有生活不谈情怀
-subtitle: 阳光沥肩头 仿佛自由人
-description: Linux C++后端/Python/MVP/PHP/小程序
+title: 阳光沥肩头 仿佛自由人 #唯有生活不谈情怀
+subtitle: 
+description: Linux C++服务端
 keywords: 
-author: 杨宇/icoty
+author: icoty
 language: zh-CN
 timezone:
 
@@ -35,7 +35,7 @@ titlecase: false # Transform title into titlecase
 external_link: true # Open external links in new tab
 filename_case: 0
 render_drafts: false
-post_asset_folder: false
+post_asset_folder: true
 relative_link: false
 future: true
 highlight:
