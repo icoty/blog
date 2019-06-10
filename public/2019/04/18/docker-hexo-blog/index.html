@@ -1,0 +1,1688 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.1.0',
+    sidebar: {"position":"left","width":240,"display":"always","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="闲谈拿出你的气质，打开你的电脑，借你半小时搭建好属于你的hexo博客，小生用dockerfile自动帮你搭建好；你只需要在你的mac或linux或windows上提前把docker安装好，如何安装不是我的重点，请参考Docker安装；作为程序员，博客就像你的影子，我都已经忘了内心曾经多少次告诫自己，一定要搭建一个属于自己的技术博客，奈何日复一日过去了，近来终于落实到行动上来，所谓明日复明日，明日何">
+<meta name="keywords" content="Dockerfile,Hexo,镜像,容器">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hexo+Github博客最简教程-Dockerfile自动搭建">
+<meta property="og:url" content="https://icoty.github.io/2019/04/18/docker-hexo-blog/index.html">
+<meta property="og:site_name" content="荒野之萍">
+<meta property="og:description" content="闲谈拿出你的气质，打开你的电脑，借你半小时搭建好属于你的hexo博客，小生用dockerfile自动帮你搭建好；你只需要在你的mac或linux或windows上提前把docker安装好，如何安装不是我的重点，请参考Docker安装；作为程序员，博客就像你的影子，我都已经忘了内心曾经多少次告诫自己，一定要搭建一个属于自己的技术博客，奈何日复一日过去了，近来终于落实到行动上来，所谓明日复明日，明日何">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://icoty.github.io/2019/04/18/docker-hexo-blog/dockerhub.png">
+<meta property="og:image" content="https://icoty.github.io/2019/04/18/docker-hexo-blog/yilia.png">
+<meta property="og:image" content="https://icoty.github.io/2019/04/18/docker-hexo-blog/github.png">
+<meta property="og:image" content="https://icoty.github.io/2019/04/18/docker-hexo-blog/ssh-key.png">
+<meta property="og:image" content="https://icoty.github.io/2019/04/18/docker-hexo-blog/add-key.png">
+<meta property="og:image" content="https://icoty.github.io/2019/04/18/docker-hexo-blog/finish-read.png">
+<meta property="og:image" content="https://icoty.github.io/2019/04/18/docker-hexo-blog/copy-right.png">
+<meta property="og:updated_time" content="2019-06-09T05:41:14.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Hexo+Github博客最简教程-Dockerfile自动搭建">
+<meta name="twitter:description" content="闲谈拿出你的气质，打开你的电脑，借你半小时搭建好属于你的hexo博客，小生用dockerfile自动帮你搭建好；你只需要在你的mac或linux或windows上提前把docker安装好，如何安装不是我的重点，请参考Docker安装；作为程序员，博客就像你的影子，我都已经忘了内心曾经多少次告诫自己，一定要搭建一个属于自己的技术博客，奈何日复一日过去了，近来终于落实到行动上来，所谓明日复明日，明日何">
+<meta name="twitter:image" content="https://icoty.github.io/2019/04/18/docker-hexo-blog/dockerhub.png">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="荒野之萍" type="application/atom+xml">
+
+
+
+  
+  
+  <link rel="canonical" href="https://icoty.github.io/2019/04/18/docker-hexo-blog/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>Hexo+Github博客最简教程-Dockerfile自动搭建 | 荒野之萍</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">荒野之萍</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">忙着活或忙着死</p>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-首页">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-关于">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-标签">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-分类">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+
+      
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>搜索</a>
+        </li>
+      
+    </ul>
+  
+
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+  
+  
+
+  
+
+  <a href="https://github.com/icoty" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="external nofollow noopener noreferrer" target="_blank"><svg width="80" height="80" viewbox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"/><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"/><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"/></svg></a>
+
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://icoty.github.io/2019/04/18/docker-hexo-blog/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="杨宇">
+      <meta itemprop="description" content="后台 / 系统">
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="荒野之萍">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Hexo+Github博客最简教程-Dockerfile自动搭建
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-04-18 15:23:05" itemprop="dateCreated datePublished" datetime="2019-04-18T15:23:05+00:00">2019-04-18</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-06-09 05:41:14" itemprop="dateModified" datetime="2019-06-09T05:41:14+00:00">2019-06-09</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Hexo/" itemprop="url" rel="index"><span itemprop="name">Hexo</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+              
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+            
+                <span class="post-meta-item-text">评论数：</span>
+                <a href="/2019/04/18/docker-hexo-blog/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2019/04/18/docker-hexo-blog/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="post-meta-item-icon">
+            <i class="fa fa-eye"></i>
+             阅读次数： 
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+            <div class="post-symbolscount">
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">本文字数：</span>
+                
+                <span title="本文字数">38k</span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">34 分钟</span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="闲谈"><a href="#闲谈" class="headerlink" title="闲谈"></a>闲谈</h3><p>拿出你的气质，打开你的电脑，借你半小时搭建好属于你的hexo博客，小生用dockerfile自动帮你搭建好；<br>你只需要在你的mac或linux或windows上提前把docker安装好，如何安装不是我的重点，请参考<a href="http://www.runoob.com/docker/ubuntu-docker-install.html" rel="external nofollow noopener noreferrer" target="_blank">Docker安装</a>；<br>作为程序员，博客就像你的影子，我都已经忘了内心曾经多少次告诫自己，一定要搭建一个属于自己的技术博客，奈何日复一日过去了，近来终于落实到行动上来，所谓明日复明日，明日何其多，早晚要做的事，劝君晚做不如早做。</p>
+<h3 id="搭建Hexo"><a href="#搭建Hexo" class="headerlink" title="搭建Hexo"></a>搭建Hexo</h3><h4 id="获取基础镜像"><a href="#获取基础镜像" class="headerlink" title="获取基础镜像"></a>获取基础镜像</h4><p>Docker安装成功之后方能进行接下来的操作，如果对Docker基本命令不熟悉又想真懂的可以看下我的另一篇文章<a href="https://icoty.github.io/2019/04/22/docker/">Docker最简教程</a>。首先从我的Docker Hub仓库上获取基础镜像：</p>
+<p><img src="/2019/04/18/docker-hexo-blog/dockerhub.png" alt="docker hub"></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ docker pull icoty1/ubuntu-hexo-blog <span class="comment"># 从Docker hub上的icoty1用户下获取基础镜像</span></span><br><span class="line">$ docker images <span class="comment"># 查看本地所有镜像，会发现icoty1/ubuntu-hexo-blog已经被pull下来了</span></span><br></pre></td></tr></table></figure>
+<h4 id="生成Dockerfile"><a href="#生成Dockerfile" class="headerlink" title="生成Dockerfile"></a>生成Dockerfile</h4><p>进入一个空的目录下新建空文件Dockerfile，复制如下内容：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 基础镜像</span></span><br><span class="line">FROM icoty1/ubuntu-hexo-blog:latest</span><br><span class="line"></span><br><span class="line">MAINTAINER icoty1 <span class="string">"https://icoty.github.io"</span> </span><br><span class="line"></span><br><span class="line">EXPOSE 4000</span><br><span class="line"></span><br><span class="line"><span class="comment"># hexo部分插件安装，使支持rss，图片，字数统计等功能</span></span><br><span class="line">RUN npm install -g hexo-cli 		\</span><br><span class="line">&amp;&amp; npm install hexo-server --save 	\</span><br><span class="line">&amp;&amp; hexo init blog &amp;&amp; <span class="built_in">cd</span> /blog 		\</span><br><span class="line">&amp;&amp; npm install 				\</span><br><span class="line">&amp;&amp; npm install hexo-deployer-git --save \</span><br><span class="line">&amp;&amp; npm install hexo-migrator-rss --save \</span><br><span class="line">&amp;&amp; npm install hexo-asset-image --save	\</span><br><span class="line">&amp;&amp; npm install hexo-wordcount --save 	\</span><br><span class="line">&amp;&amp; npm install hexo-generator-sitemap --save 		\</span><br><span class="line">&amp;&amp; npm install hexo-generator-baidu-sitemap --save 	\</span><br><span class="line">&amp;&amp; npm install hexo-helper-live2d --save 		\</span><br><span class="line">&amp;&amp; git <span class="built_in">clone</span> https://github.com/litten/hexo-theme-yilia.git themes/yilia \</span><br><span class="line">&amp;&amp; sed <span class="string">"s/theme: landscape/theme: yilia/g"</span> -i /blog/_config.yml</span><br></pre></td></tr></table></figure>
+<h4 id="更换主题"><a href="#更换主题" class="headerlink" title="更换主题"></a>更换主题</h4><p>Dockerfile中的最后两行内容表示的含义是从github上把hexo-theme-yilia克隆下来并重命名成yilia，然后放到容器的/blog/themes/目录下，其中hexo-theme-yilia是hexo的主题，hexo有很多种主题，用每一种主题搭建出来的hexo博客界面美观和布局都不尽相同，你可以通过<a href="https://hexo.io/themes/" rel="external nofollow noopener noreferrer" target="_blank">hexo官网</a>上浏览每一种主题长啥样子，通过<a href="https://github.com/search?q=hexo-theme" rel="external nofollow noopener noreferrer" target="_blank">github</a>获取主题的源码仓库，选择一个你喜欢的主题，并相应的修改这两行。假如你从github选择的主题仓库地址是<a href="https://github.com/yscoder/hexo-theme-indigo.git" rel="external nofollow noopener noreferrer" target="_blank">https://github.com/yscoder/hexo-theme-indigo.git</a> ， 那么你需要按照如下方式进行修改，如果你就想用yilia，那么你不需要做任何修改，我用的主题是<a href="https://github.com/theme-next/hexo-theme-next.git" rel="external nofollow noopener noreferrer" target="_blank">https://github.com/theme-next/hexo-theme-next.git</a></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&amp;&amp; git <span class="built_in">clone</span> https://github.com/yscoder/hexo-theme-indigo.git themes/indigo \</span><br><span class="line">&amp;&amp; sed <span class="string">"s/theme: landscape/theme: indigo/g"</span> -i /blog/_config.yml</span><br></pre></td></tr></table></figure>
+<h4 id="构建Hexo镜像"><a href="#构建Hexo镜像" class="headerlink" title="构建Hexo镜像"></a>构建Hexo镜像</h4><p>在Dockerfile的同级目录执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ docker build -t icoty1/ubuntu-hexo .  <span class="comment"># 把icoty1/ubuntu-hexo替换成你取的名字</span></span><br><span class="line">$ docker images	 <span class="comment"># 能够看到多出一条记录icoty1/ubuntu-hexo，并能看到该镜像的[IMAGE ID]</span></span><br></pre></td></tr></table></figure>
+<h4 id="启动容器"><a href="#启动容器" class="headerlink" title="启动容器"></a>启动容器</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">/* 把[IMAGE ID]替换成上一步构建出来的镜像的ID，该句执行成功会多出来一个容器并有一个[CONTAINER ID]</span><br><span class="line"> * -v /home/yangyu/blog/：/blog/是把本机的/home/yangyu/blog/目录映射到容器的/blog/目录</span><br><span class="line"> * 通过目录映射，你只需要在本机编辑/home/yangyu/blog/目录下的文件，而不用每次都进入容器/blog/目录下编辑文件</span><br><span class="line"> * -p 4000:4000 将主机的4000端口映射到容器的4000端口</span><br><span class="line"> *\</span><br><span class="line">$ docker run -d -ti -p 4000:4000 -v /home/yangyu/blog/：/blog/ [IMAGE ID] /bin/bash </span><br><span class="line">$ docker ps -a	<span class="comment"># 执行该句列出当前所有的容器</span></span><br><span class="line">$ docker <span class="built_in">exec</span> -it [CONTAINER ID] /bin/bash <span class="comment"># 根据前一步的容器ID进入该容器内部</span></span><br><span class="line">$ <span class="built_in">cd</span> /blog/ &amp;&amp; hexo s <span class="comment"># 进入容器内部的/blog/目录下，启动hexo</span></span><br></pre></td></tr></table></figure>
+<h4 id="浏览器测试"><a href="#浏览器测试" class="headerlink" title="浏览器测试"></a>浏览器测试</h4><p>浏览器访问<a href="http://localhost:4000" rel="external nofollow noopener noreferrer" target="_blank">http://localhost:4000</a> ，出现下图说明已经成功，以后你的博客配置，文章撰写和发布等，都在/home/yangyu/blog/目录下进行，这和在容器内部/blog/目录下操作完全对等。</p>
+<p><img src="/2019/04/18/docker-hexo-blog/yilia.png" alt="yilia"></p>
+<h3 id="Hexo部署到Github"><a href="#Hexo部署到Github" class="headerlink" title="Hexo部署到Github"></a>Hexo部署到Github</h3><p><a href="https://github.com/join?source=header-home" rel="external nofollow noopener noreferrer" target="_blank">注册Github账户</a>，如果已经注册，跳过此步；<br>在github上仓库“用户名.github.io”，比如我的用户名为icoty，仓库名则为：icoty.github.io；</p>
+<p><img src="/2019/04/18/docker-hexo-blog/github.png" alt="yilia"></p>
+<p>执行如下命令生成ssh key，执行完后复制~/.sshid_rsa.pub文件内的全部内容，按照图示添加ssh keys，并粘贴保存到Key栏中，Title栏随便取。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">cd</span> ~/.ssh</span><br><span class="line">$ ssh-keygen -t rsa -C <span class="string">"youremail@example.com"</span> <span class="comment"># 全程回车</span></span><br><span class="line">$ git config --global user.name <span class="string">"你用github用户名"</span></span><br><span class="line">$ git config --global user.email <span class="string">"你的github邮箱地址"</span></span><br></pre></td></tr></table></figure>
+<p><img src="/2019/04/18/docker-hexo-blog/ssh-key.png" alt="yilia"></p>
+<p><img src="/2019/04/18/docker-hexo-blog/add-key.png" alt="yilia"></p>
+<h3 id="配置Hexo主题"><a href="#配置Hexo主题" class="headerlink" title="配置Hexo主题"></a>配置Hexo主题</h3><p>编辑/blog/_config.yml文件，编辑标题、描述信息、Github信息，下图参见我的：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Site</span></span><br><span class="line">title: 阳光沥肩头 仿佛自由人 <span class="comment"># 标题</span></span><br><span class="line">subtitle: 	<span class="comment"># 子标题</span></span><br><span class="line">description: Linux C++服务端 <span class="comment"># 描述信息</span></span><br><span class="line">keywords: </span><br><span class="line">author: icoty</span><br><span class="line">language: zh-CN <span class="comment"># 语言</span></span><br><span class="line">timezone: <span class="comment"># 时区</span></span><br><span class="line"></span><br><span class="line">deploy:</span><br><span class="line">  - <span class="built_in">type</span>: git</span><br><span class="line">    repository: git@github.com:icoty/icoty.github.io.git  <span class="comment"># 设置repository对应的链接</span></span><br><span class="line">    branch: master                                        <span class="comment"># 设置提交到的分支</span></span><br><span class="line">    message: Site updated at &#123;&#123; now(<span class="string">"YYYY-MM-DD HH:mm:ss"</span>) &#125;&#125; <span class="comment"># 设置我们提交的信息</span></span><br></pre></td></tr></table></figure>
+<p>执行如下命令发布到github上，通过“https://你的github用户名.github.io”访问，我的是<a href="https://icoty.github.io">https://icoty.github.io</a></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$hexo</span> generate</span><br><span class="line"><span class="variable">$hexo</span> deploy <span class="comment"># 部署到GitHub</span></span><br></pre></td></tr></table></figure>
+<p>编辑/blog/themes/yilia/_config.yml文件，自定义其他配置，如友链、评论、分享、头像等，这些配置并不是一定要做，做不做都行，只是配置的完善些，你的Hexo博客界面看起来美观些，如何配置在此不一一赘述，请自行查看对应主题的官方文档和Github说明。如果你能操作这里，说明我这个教程还是有效的，感谢你的坚持！</p>
+<h3 id="Hexo命令"><a href="#Hexo命令" class="headerlink" title="Hexo命令"></a><a href="https://hexo.io/zh-cn/docs/commands" rel="external nofollow noopener noreferrer" target="_blank">Hexo命令</a></h3><p>Hexo搭建好后，你可以写博客发布到GitHub 上，别人通过“https://你的github用户名.github.io”就能访问你的博客和看到你写的文章，而这个章节就是教你怎么在本地写你的博客，写博客用的MarkDown语法，推荐你安装MarkDown编辑器Typora。下面列出写博客过程中常用的命令，这些命令都需要走到/blog/目录下执行。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$hexo</span> new <span class="string">"my-hexo"</span> <span class="comment">#新建my-hexo文章，在/blog/source/_post/目录下生成my-hexo.md，在这个文件里面写你的文章</span></span><br><span class="line"><span class="variable">$hexo</span> generate <span class="comment"># 文章写好后保存，然后执行这条命令，生成静态页面至public目录</span></span><br><span class="line"><span class="variable">$hexo</span> s <span class="comment"># 然后开启预览访问端口（默认端口4000，'ctrl+c'关闭server，‘ctrl+z’放到后台运行），通过http://localhost:4000 查看效果，如果满意就执行下一条命令发布到github</span></span><br><span class="line"><span class="variable">$hexo</span> deploy <span class="comment"># 发布到github，通过https://你用github用户名.github.io 访问</span></span><br><span class="line"><span class="variable">$hexo</span> clean <span class="comment"># 有时你写文章和配置其他内容后，老是不生效，就执行下该命令清除缓存文件 (db.json) 和已生成的静态文件 (public)，不是删除，你的文章仍然在的</span></span><br><span class="line"><span class="variable">$nohup</span> hexo s &amp; <span class="comment"># 启动hexo以后台方式运行</span></span><br><span class="line"><span class="variable">$hexo</span> new page <span class="string">"About"</span> <span class="comment">#新建About页面，这个是配置Hexo界面多出来一个About布局</span></span><br><span class="line"><span class="variable">$hexo</span> <span class="built_in">help</span>  <span class="comment"># 查看帮助</span></span><br><span class="line"><span class="variable">$hexo</span> version  <span class="comment">#查看Hexo的版本</span></span><br></pre></td></tr></table></figure>
+<h3 id="MarkDown语法"><a href="#MarkDown语法" class="headerlink" title="MarkDown语法"></a><a href="https://www.jianshu.com/p/191d1e21f7ed" rel="external nofollow noopener noreferrer" target="_blank">MarkDown语法</a></h3><p>这个比较基础，网上教程也一大堆，MarkDown很容易学，放心比九九表容易多了，只要你用markdown实际动手写过一篇博文后就上手了，因此没啥可说的。</p>
+<h3 id="Next主题配置"><a href="#Next主题配置" class="headerlink" title="Next主题配置"></a>Next主题配置</h3><p>接下来的内容是针对next主题的配置，因为我选择的是next，不同主题可能有差异，特此说明。</p>
+<h4 id="修改文章内链接文本样式"><a href="#修改文章内链接文本样式" class="headerlink" title="修改文章内链接文本样式"></a>修改文章内链接文本样式</h4><p>打开themes/next/source/css/_common/components/post/post.styl文件，在文件最后且在@import之前添加如下代码：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">// 文章内链接文本样式</span><br><span class="line">.post-body p a&#123;</span><br><span class="line">  color: <span class="comment">#0593d3; //原始链接颜色</span></span><br><span class="line">  border-bottom: none;</span><br><span class="line">  border-bottom: 1px solid <span class="comment">#0593d3; //底部分割线颜色</span></span><br><span class="line">  &amp;:hover &#123;</span><br><span class="line">    color: <span class="comment">#fc6423; //鼠标经过颜色</span></span><br><span class="line">    border-bottom: none;</span><br><span class="line">    border-bottom: 1px solid <span class="comment">#fc6423; //底部分割线颜色</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h4 id="文章末尾添加“文章结束”标记"><a href="#文章末尾添加“文章结束”标记" class="headerlink" title="文章末尾添加“文章结束”标记"></a>文章末尾添加“文章结束”标记</h4><p>在themes/next/layout/_macro/目录下新建passage-end-tag.swig，填入如下内容：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&lt;div&gt;</span><br><span class="line">    &#123;% <span class="keyword">if</span> not is_index %&#125;</span><br><span class="line">        &lt;div style=<span class="string">"text-align:center;color: #ccc;font-size:14px;"</span>&gt;-------------本文结束&lt;i class=<span class="string">"fa fa-paw"</span>&gt;&lt;/i&gt;感谢您的阅读-------------&lt;/div&gt;</span><br><span class="line">    &#123;% endif %&#125;</span><br><span class="line">&lt;/div&gt;</span><br></pre></td></tr></table></figure></p>
+<p>然后编辑themes/next/layout/_macro/post.swig，按照下图添加代码块：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&lt;div&gt;</span><br><span class="line">  &#123;% <span class="keyword">if</span> not is_index %&#125;</span><br><span class="line">    &#123;% include <span class="string">'passage-end-tag.swig'</span> %&#125;</span><br><span class="line">  &#123;% endif %&#125;</span><br><span class="line">&lt;/div&gt;</span><br></pre></td></tr></table></figure></p>
+<p><img src="/2019/04/18/docker-hexo-blog/finish-read.png" alt="yilia"></p>
+<p>最后编辑themes/next/_config.yml，添加如下内容：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 文章末尾添加“本文结束”标记</span></span><br><span class="line">passage_end_tag:</span><br><span class="line">  enabled: <span class="literal">true</span></span><br></pre></td></tr></table></figure></p>
+<h4 id="添加网页加载进度条"><a href="#添加网页加载进度条" class="headerlink" title="添加网页加载进度条"></a>添加网页加载进度条</h4><p>打开themes/next/_config.yml，搜索“pace:”，设置为true。<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pace: <span class="literal">true</span></span><br></pre></td></tr></table></figure></p>
+<h4 id="设置文章的显示顺序"><a href="#设置文章的显示顺序" class="headerlink" title="设置文章的显示顺序"></a>设置文章的显示顺序</h4><p>编辑node_modules/hexo-generator-index/lib/generator.js，在return之前添加如下代码：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">posts.data = posts.data.sort(<span class="keyword">function</span>(a, b) &#123;</span><br><span class="line"><span class="keyword">if</span>(a.top &amp;&amp; b.top) &#123; // 两篇文章top都有定义</span><br><span class="line">    <span class="keyword">if</span>(a.top == b.top) <span class="built_in">return</span> b.date - a.date; // 若top值一样则按照文章日期降序排</span><br><span class="line">    <span class="keyword">else</span> <span class="built_in">return</span> b.top - a.top; // 否则按照top值降序排</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">else</span> <span class="keyword">if</span>(a.top &amp;&amp; !b.top) &#123; // 以下是只有一篇文章top有定义，那么将有top的排在前面（这里用异或操作居然不行233）</span><br><span class="line">    <span class="built_in">return</span> -1;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">else</span> <span class="keyword">if</span>(!a.top &amp;&amp; b.top) &#123;</span><br><span class="line">    <span class="built_in">return</span> 1;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">else</span> <span class="built_in">return</span> b.date - a.date; // 都没定义按照文章日期降序排</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure></p>
+<p>然后在每篇文章的头部添加top字段，top值越大的文章显示越靠前。<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">---</span><br><span class="line">title: Hexo+Github博客最简教程-Dockerfile自动搭建</span><br><span class="line">date: 2019-04-18 15:23:05</span><br><span class="line">top: 6</span><br><span class="line">tags: [Hexo, Dockerfile, Linux, Github]</span><br><span class="line">categories: [IDE]</span><br><span class="line">copyright: ture</span><br><span class="line">---</span><br></pre></td></tr></table></figure></p>
+<h4 id="添加底部的小图标"><a href="#添加底部的小图标" class="headerlink" title="添加底部的小图标"></a>添加底部的小图标</h4><p>打开themes/next/layout/_partials/footer.swig搜索with-love，修改为如下代码。从<a href="https://fontawesome.com/icons?d=gallery&amp;q=heart" rel="external nofollow noopener noreferrer" target="_blank">fontawesom</a>选择你喜欢的图标名称，我这里选择的是heart。<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;span class=<span class="string">"with-love"</span> id=<span class="string">"animate"</span>&gt;</span><br><span class="line">  &lt;i class=<span class="string">"fa fa-heart"</span> aria-hidden = <span class="string">"true"</span>&gt;&lt;/i&gt;</span><br><span class="line">&lt;/span&gt;</span><br></pre></td></tr></table></figure></p>
+<h4 id="文章底部添加版权信息"><a href="#文章底部添加版权信息" class="headerlink" title="文章底部添加版权信息"></a>文章底部添加版权信息</h4><p>在themes/next/layout/_macro/下新建 my-copyright.swig，填入如下内容：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">&#123;% <span class="keyword">if</span> page.copyright %&#125;</span><br><span class="line">&lt;div class=<span class="string">"my_post_copyright"</span>&gt;</span><br><span class="line">  &lt;script src=<span class="string">"//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"</span>&gt;&lt;/script&gt;</span><br><span class="line">  </span><br><span class="line">  &lt;!-- JS库 sweetalert 可修改路径 --&gt;</span><br><span class="line">  &lt;script src=<span class="string">"https://cdn.bootcss.com/jquery/2.0.0/jquery.min.js"</span>&gt;&lt;/script&gt;</span><br><span class="line">  &lt;script src=<span class="string">"https://unpkg.com/sweetalert/dist/sweetalert.min.js"</span>&gt;&lt;/script&gt;</span><br><span class="line">  &lt;p&gt;&lt;span&gt;本文标题:&lt;/span&gt;&lt;a href=<span class="string">"&#123;&#123; url_for(page.path) &#125;&#125;"</span>&gt;&#123;&#123; page.title &#125;&#125;&lt;/a&gt;&lt;/p&gt;</span><br><span class="line">  &lt;p&gt;&lt;span&gt;文章作者:&lt;/span&gt;&lt;a href=<span class="string">"/"</span> title=<span class="string">"访问 &#123;&#123; theme.author &#125;&#125; 的个人博客"</span>&gt;&#123;&#123; theme.author &#125;&#125;&lt;/a&gt;&lt;/p&gt;</span><br><span class="line">  &lt;p&gt;&lt;span&gt;发布时间:&lt;/span&gt;&#123;&#123; page.date.format(<span class="string">"YYYY年MM月DD日 - HH:MM"</span>) &#125;&#125;&lt;/p&gt;</span><br><span class="line">  &lt;p&gt;&lt;span&gt;最后更新:&lt;/span&gt;&#123;&#123; page.updated.format(<span class="string">"YYYY年MM月DD日 - HH:MM"</span>) &#125;&#125;&lt;/p&gt;</span><br><span class="line">  &lt;p&gt;&lt;span&gt;原始链接:&lt;/span&gt;&lt;a href=<span class="string">"&#123;&#123; url_for(page.path) &#125;&#125;"</span> title=<span class="string">"&#123;&#123; page.title &#125;&#125;"</span>&gt;&#123;&#123; page.permalink &#125;&#125;&lt;/a&gt;</span><br><span class="line">    &lt;span class=<span class="string">"copy-path"</span>  title=<span class="string">"点击复制文章链接"</span>&gt;&lt;i class=<span class="string">"fa fa-clipboard"</span> data-clipboard-text=<span class="string">"&#123;&#123; page.permalink &#125;&#125;"</span>  aria-label=<span class="string">"复制成功！"</span>&gt;&lt;/i&gt;&lt;/span&gt;</span><br><span class="line">  &lt;/p&gt;</span><br><span class="line">  &lt;p&gt;&lt;span&gt;许可协议:&lt;/span&gt;&lt;i class=<span class="string">"fa fa-creative-commons"</span>&gt;&lt;/i&gt; &lt;a rel=<span class="string">"license"</span> href=<span class="string">"https://creativecommons.org/licenses/by-nc-nd/4.0/"</span> target=<span class="string">"_blank"</span> title=<span class="string">"Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)"</span>&gt;署名-非商业性使用-禁止演绎 4.0 国际&lt;/a&gt; 转载请保留原文链接及作者。&lt;/p&gt;  </span><br><span class="line">&lt;/div&gt;</span><br><span class="line">&lt;script&gt; </span><br><span class="line">    var clipboard = new Clipboard(<span class="string">'.fa-clipboard'</span>);</span><br><span class="line">    $(<span class="string">".fa-clipboard"</span>).click(<span class="function"><span class="title">function</span></span>()&#123;</span><br><span class="line">      clipboard.on(<span class="string">'success'</span>, <span class="function"><span class="title">function</span></span>()&#123;</span><br><span class="line">        swal(&#123;   </span><br><span class="line">          title: <span class="string">""</span>,   </span><br><span class="line">          text: <span class="string">'复制成功'</span>,</span><br><span class="line">          icon: <span class="string">"success"</span>, </span><br><span class="line">          showConfirmButton: <span class="literal">true</span></span><br><span class="line">          &#125;);</span><br><span class="line">    &#125;);</span><br><span class="line">    &#125;);  </span><br><span class="line">&lt;/script&gt;</span><br><span class="line">&#123;% endif %&#125;</span><br></pre></td></tr></table></figure></p>
+<p>然后在themes/next/source/css/_common/components/post/下新建my-post-copyright.styl，填入如下内容：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line">.my_post_copyright &#123;</span><br><span class="line">  width: 85%;</span><br><span class="line">  max-width: 45em;</span><br><span class="line">  margin: 2.8em auto 0;</span><br><span class="line">  padding: 0.5em 1.0em;</span><br><span class="line">  border: 1px solid <span class="comment">#d3d3d3;</span></span><br><span class="line">  font-size: 0.93rem;</span><br><span class="line">  line-height: 1.6em;</span><br><span class="line">  word-break: <span class="built_in">break</span>-all;</span><br><span class="line">  background: rgba(255,255,255,0.4);</span><br><span class="line">&#125;</span><br><span class="line">.my_post_copyright p&#123;margin:0;&#125;</span><br><span class="line">.my_post_copyright span &#123;</span><br><span class="line">  display: inline-block;</span><br><span class="line">  width: 5.2em;</span><br><span class="line">  color: <span class="comment">#b5b5b5;</span></span><br><span class="line">  font-weight: bold;</span><br><span class="line">&#125;</span><br><span class="line">.my_post_copyright .raw &#123;</span><br><span class="line">  margin-left: 1em;</span><br><span class="line">  width: 5em;</span><br><span class="line">&#125;</span><br><span class="line">.my_post_copyright a &#123;</span><br><span class="line">  color: <span class="comment">#808080;</span></span><br><span class="line">  border-bottom:0;</span><br><span class="line">&#125;</span><br><span class="line">.my_post_copyright a:hover &#123;</span><br><span class="line">  color: <span class="comment">#a3d2a3;</span></span><br><span class="line">  text-decoration: underline;</span><br><span class="line">&#125;</span><br><span class="line">.my_post_copyright:hover .fa-clipboard &#123;</span><br><span class="line">  color: <span class="comment">#000;</span></span><br><span class="line">&#125;</span><br><span class="line">.my_post_copyright .post-url:hover &#123;</span><br><span class="line">  font-weight: normal;</span><br><span class="line">&#125;</span><br><span class="line">.my_post_copyright .copy-path &#123;</span><br><span class="line">  margin-left: 1em;</span><br><span class="line">  width: 1em;</span><br><span class="line">  +<span class="function"><span class="title">mobile</span></span>()&#123;display:none;&#125;</span><br><span class="line">&#125;</span><br><span class="line">.my_post_copyright .copy-path:hover &#123;</span><br><span class="line">  color: <span class="comment">#808080;</span></span><br><span class="line">  cursor: pointer;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>接着编辑themes/next/layout/_macro/post.swig文件，按照下图位置添加如下代码：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&lt;div&gt;</span><br><span class="line">      &#123;% <span class="keyword">if</span> not is_index %&#125;</span><br><span class="line">        &#123;% include <span class="string">'my-copyright.swig'</span> %&#125;</span><br><span class="line">      &#123;% endif %&#125;</span><br><span class="line">&lt;/div&gt;</span><br></pre></td></tr></table></figure></p>
+<p><img src="/2019/04/18/docker-hexo-blog/copy-right.png" alt="docker hub"></p>
+<p>接着在themes/next/source/css/_common/components/post/post.styl文件最后添加如下代码：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">@import <span class="string">"my-post-copyright"</span></span><br></pre></td></tr></table></figure></p>
+<p>然后，还需要在文章的头部添加copyright字段：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">---</span><br><span class="line">title: Hexo+Github博客最简教程-Dockerfile自动搭建</span><br><span class="line">date: 2019-04-18 15:23:05</span><br><span class="line">top: 6</span><br><span class="line">tags: [Hexo, Dockerfile, Linux, Github]</span><br><span class="line">categories: [IDE]</span><br><span class="line">copyright: ture</span><br><span class="line">---</span><br></pre></td></tr></table></figure></p>
+<p>最后，编辑根目录下的_config.yml文件，把url换成你的主页：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># URL</span></span><br><span class="line"><span class="comment">## If your site is put in a subdirectory</span></span><br><span class="line">url: https://icoty.github.io  <span class="comment"># 这里换成你的主页</span></span><br><span class="line">root: /</span><br><span class="line">permalink: :year/:month/:day/:title/</span><br><span class="line">permalink_defaults:</span><br></pre></td></tr></table></figure></p>
+<h4 id="添加网易云音乐外链"><a href="#添加网易云音乐外链" class="headerlink" title="添加网易云音乐外链"></a>添加网易云音乐外链</h4><p>登陆网易云音乐网页版；点击个人头像“我的主页”；然后能够看到“我创建的歌单”，如果没有则创建一个歌单；选中一个歌单点进去，能够看到“歌曲列表”，点击“歌曲列表”右边的“生成外链播放器”；然后点击右下角的“复制代码”，粘贴到themes/next/layout/_macro/sidebar.swig文件中指定的位置即可，我的是放在侧栏中”友链”下面的。</p>
+<h4 id="设置文章缩略显示"><a href="#设置文章缩略显示" class="headerlink" title="设置文章缩略显示"></a>设置文章缩略显示</h4><p>编辑themes/next/_config.yml，搜索auto_excerpt，设置为true：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Automatically Excerpt (Not recommend).</span></span><br><span class="line"><span class="comment"># 设置文章不显示全部  点进去再显示全部</span></span><br><span class="line"><span class="comment"># Use &lt;!-- more --&gt; in the post to control excerpt accurately.</span></span><br><span class="line">auto_excerpt:</span><br><span class="line">  <span class="built_in">enable</span>: <span class="literal">true</span></span><br><span class="line">  length: 150</span><br></pre></td></tr></table></figure></p>
+<h4 id="自定义代码块样式"><a href="#自定义代码块样式" class="headerlink" title="自定义代码块样式"></a>自定义代码块样式</h4><p>打开themes\next\source\css_custom\custom.styl，添加如下内容：<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">// Custom styles.</span><br><span class="line">code &#123;</span><br><span class="line">    color: <span class="comment">#ff7600;</span></span><br><span class="line">    background: <span class="comment">#fbf7f8;</span></span><br><span class="line">    margin: 2px;</span><br><span class="line">&#125;</span><br><span class="line">// 大代码块的自定义样式</span><br><span class="line">.highlight, pre &#123;</span><br><span class="line">    margin: 5px 0;</span><br><span class="line">    padding: 5px;</span><br><span class="line">    border-radius: 3px;</span><br><span class="line">&#125;</span><br><span class="line">.highlight, code, pre &#123;</span><br><span class="line">    border: 1px solid <span class="comment">#d6d6d6;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h4 id="把一篇文章归为多类"><a href="#把一篇文章归为多类" class="headerlink" title="把一篇文章归为多类"></a>把一篇文章归为多类</h4><p>如下会把该文章归为Linux/IPC类。<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">categories:</span><br><span class="line">  - Linux</span><br><span class="line">  - IPC</span><br></pre></td></tr></table></figure></p>
+<p>如下会把该文章归为Linux/IPC和TCP两类。<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">categories:</span><br><span class="line">  - [Linux, ICP]</span><br><span class="line">  - TCP</span><br></pre></td></tr></table></figure></p>
+<h3 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h3><p><a href="https://www.jianshu.com/p/9f0e90cc32c2" rel="external nofollow noopener noreferrer" target="_blank">https://www.jianshu.com/p/9f0e90cc32c2</a><br><a href="https://www.jianshu.com/p/bff1b1845ac9" rel="external nofollow noopener noreferrer" target="_blank">https://www.jianshu.com/p/bff1b1845ac9</a></p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+    <div>
+     
+        <div>
+    
+        <div style="text-align:center;color: #ccc;font-size:14px;">-------------本文结束<i class="fa fa-paw"></i>感谢您的阅读-------------</div>
+    
+</div>
+
+      
+    </div>
+
+    <div>
+      
+        
+<div class="my_post_copyright">
+  <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+  <!-- JS库 sweetalert 可修改路径 -->
+  <script src="https://cdn.bootcss.com/jquery/2.0.0/jquery.min.js"></script>
+  <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+  <p><span>本文标题:</span><a href="/2019/04/18/docker-hexo-blog/">Hexo+Github博客最简教程-Dockerfile自动搭建</a></p>
+  <p><span>文章作者:</span><a href="/" title="访问 杨宇 的个人博客">杨宇</a></p>
+  <p><span>发布时间:</span>2019年04月18日 - 15:04</p>
+  <p><span>最后更新:</span>2019年06月09日 - 05:06</p>
+  <p><span>原始链接:</span><a href="/2019/04/18/docker-hexo-blog/" title="Hexo+Github博客最简教程-Dockerfile自动搭建">https://icoty.github.io/2019/04/18/docker-hexo-blog/</a>
+    <span class="copy-path" title="点击复制文章链接"><i class="fa fa-clipboard" data-clipboard-text="https://icoty.github.io/2019/04/18/docker-hexo-blog/" aria-label="复制成功！"></i></span>
+  </p>
+  <p><span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">署名-非商业性使用-禁止演绎 4.0 国际</a> 转载请保留原文链接及作者。</p>
+</div>
+<script>
+    var clipboard = new Clipboard('.fa-clipboard');
+    $(".fa-clipboard").click(function(){
+      clipboard.on('success', function(){
+        swal({
+          title: "",
+          text: '复制成功',
+          icon: "success",
+          showConfirmButton: true
+          });
+    });
+    });
+</script>
+
+
+      
+    </div>
+
+    
+
+    
+      
+    
+    
+      <div>
+        <div id="reward-container">
+  <div>打赏狗粮！</div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+
+    
+      
+      
+        
+      
+      <div style="display: inline-block">
+        <img src="/images/wechatpay.jpg" alt="杨宇 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+      
+      
+        
+      
+      <div style="display: inline-block">
+        <img src="/images/alipay.jpg" alt="杨宇 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Dockerfile/" rel="tag"><i class="fa fa-tag"></i> Dockerfile</a>
+          
+            <a href="/tags/Hexo/" rel="tag"><i class="fa fa-tag"></i> Hexo</a>
+          
+            <a href="/tags/镜像/" rel="tag"><i class="fa fa-tag"></i> 镜像</a>
+          
+            <a href="/tags/容器/" rel="tag"><i class="fa fa-tag"></i> 容器</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/04/18/ipc-chat/" rel="next" title="基于共享内存、信号、命名管道和Select模型实现聊天窗口">
+                <i class="fa fa-chevron-left"></i> 基于共享内存、信号、命名管道和Select模型实现聊天窗口
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/04/22/docker/" rel="prev" title="Docker最简教程">
+                Docker最简教程 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="杨宇">
+            
+              <p class="site-author-name" itemprop="name">杨宇</p>
+              <div class="site-description motion-element" itemprop="description">后台 / 系统</div>
+          </div>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives">
+                
+                    <span class="site-state-item-count">17</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">15</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">55</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/icoty" title="GitHub &rarr; https://github.com/icoty" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://www.cnblogs.com/icoty23" title="博客园 &rarr; https://www.cnblogs.com/icoty23" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-spinner"></i>博客园</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://blog.csdn.net/qq_36347375" title="CSDN &rarr; https://blog.csdn.net/qq_36347375" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-copyright"></i>CSDN</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:icoty.yangy@gmail.com" title="E-mail &rarr; mailto:icoty.yangy@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-mail</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                友链
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://laibh.top" title="http://laibh.top" rel="external nofollow noopener noreferrer" target="_blank">赖同学</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#闲谈"><span class="nav-number">1.</span> <span class="nav-text">闲谈</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#搭建Hexo"><span class="nav-number">2.</span> <span class="nav-text">搭建Hexo</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#获取基础镜像"><span class="nav-number">2.1.</span> <span class="nav-text">获取基础镜像</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#生成Dockerfile"><span class="nav-number">2.2.</span> <span class="nav-text">生成Dockerfile</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#更换主题"><span class="nav-number">2.3.</span> <span class="nav-text">更换主题</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#构建Hexo镜像"><span class="nav-number">2.4.</span> <span class="nav-text">构建Hexo镜像</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#启动容器"><span class="nav-number">2.5.</span> <span class="nav-text">启动容器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#浏览器测试"><span class="nav-number">2.6.</span> <span class="nav-text">浏览器测试</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Hexo部署到Github"><span class="nav-number">3.</span> <span class="nav-text">Hexo部署到Github</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#配置Hexo主题"><span class="nav-number">4.</span> <span class="nav-text">配置Hexo主题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Hexo命令"><span class="nav-number">5.</span> <span class="nav-text">Hexo命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MarkDown语法"><span class="nav-number">6.</span> <span class="nav-text">MarkDown语法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Next主题配置"><span class="nav-number">7.</span> <span class="nav-text">Next主题配置</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#修改文章内链接文本样式"><span class="nav-number">7.1.</span> <span class="nav-text">修改文章内链接文本样式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#文章末尾添加“文章结束”标记"><span class="nav-number">7.2.</span> <span class="nav-text">文章末尾添加“文章结束”标记</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#添加网页加载进度条"><span class="nav-number">7.3.</span> <span class="nav-text">添加网页加载进度条</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#设置文章的显示顺序"><span class="nav-number">7.4.</span> <span class="nav-text">设置文章的显示顺序</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#添加底部的小图标"><span class="nav-number">7.5.</span> <span class="nav-text">添加底部的小图标</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#文章底部添加版权信息"><span class="nav-number">7.6.</span> <span class="nav-text">文章底部添加版权信息</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#添加网易云音乐外链"><span class="nav-number">7.7.</span> <span class="nav-text">添加网易云音乐外链</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#设置文章缩略显示"><span class="nav-number">7.8.</span> <span class="nav-text">设置文章缩略显示</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#自定义代码块样式"><span class="nav-number">7.9.</span> <span class="nav-text">自定义代码块样式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#把一篇文章归为多类"><span class="nav-number">7.10.</span> <span class="nav-text">把一篇文章归为多类</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考文献"><span class="nav-number">8.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+      <iframe frameborder="no" border="0" marginwidth="0" marginheight="20" width="270" height="42" src="//music.163.com/outchain/player?type=0&id=2768835095&auto=0&height=32"></iframe>
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-heart" aria-hidden="true"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">杨宇</span>
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    
+      <span class="post-meta-item-text">站点总字数：</span>
+    
+    <span title="站点总字数">165k</span>
+  
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    
+    <span title="站点阅读时长">2:30</span>
+  
+</div>
+
+
+
+
+
+
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="post-meta-item-icon">
+      <i class="fa fa-user"></i>
+    </span>
+    <span class="site-uv" title="总访客量">
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+    </span>
+  
+
+  
+    <span class="post-meta-divider">|</span>
+  
+
+  
+    <span class="post-meta-item-icon">
+      <i class="fa fa-eye"></i>
+    </span>
+    <span class="site-pv" title="总访问量">
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.0"></script>
+
+  <script src="/js/motion.js?v=7.1.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.1.0"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.1.0"></script>
+
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.0"></script>
+<script src="/js/post-details.js?v=7.1.0"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.0"></script>
+
+
+  
+
+  
+
+  
+
+  
+  
+
+<script src="//cdn1.lncld.net/static/js/3.11.1/av-min.js"></script>
+
+
+
+<script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+
+<script>
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'zWlHCMwekbEgyjRmAxWLoIR4-gzGzoHsz',
+    appKey: 'LbfEX3cmne22ibHj9hcwButY',
+    placeholder: '欢迎探讨，留下你的邮箱能够收到我的回复喔！',
+    avatar: 'mm',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: '' || 'zh-cn'
+  });
+</script>
+
+
+
+
+  
+
+
+  
+  <script>
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url).replace(/\/{2,}/g, '/');
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x"></i></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x"></i></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+  
+
+
+  
+
+  
+<script>
+if ($('body').find('pre.mermaid').length) {
+  $.ajax({
+    type: 'GET',
+    url: '//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js',
+    dataType: 'script',
+    cache: true,
+    success: function() {
+      mermaid.initialize({
+        theme: 'forest',
+        logLevel: 3,
+        flowchart: { curve: 'linear' },
+        gantt: { axisFormat: '%m/%d/%Y' },
+        sequence: { actorMargin: 50 }
+      });
+    }
+  });
+}
+</script>
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

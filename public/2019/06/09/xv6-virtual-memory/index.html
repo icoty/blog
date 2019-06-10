@@ -1,0 +1,1713 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.1.0',
+    sidebar: {"position":"left","width":240,"display":"always","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="Exercise1 源代码阅读 内存管理部分: kalloc.c vm.c 以及相关其他文件代码   kalloc.c：char  kalloc(void)负责在需要的时候为用户空间、内核栈、页表页以及缓冲区分配物理内存，将物理地址转为虚拟地址返回，物理页大小为4k。void kfree(char  v)接收一个虚拟地址，找对对应的物理地址进行释放。xv6使用空闲内存的前部分作为指针域来指向下一页">
+<meta name="keywords" content="XV6,虚拟内存">
+<meta property="og:type" content="article">
+<meta property="og:title" content="XV6源代码阅读-虚拟内存管理">
+<meta property="og:url" content="https://icoty.github.io/2019/06/09/xv6-virtual-memory/index.html">
+<meta property="og:site_name" content="荒野之萍">
+<meta property="og:description" content="Exercise1 源代码阅读 内存管理部分: kalloc.c vm.c 以及相关其他文件代码   kalloc.c：char  kalloc(void)负责在需要的时候为用户空间、内核栈、页表页以及缓冲区分配物理内存，将物理地址转为虚拟地址返回，物理页大小为4k。void kfree(char  v)接收一个虚拟地址，找对对应的物理地址进行释放。xv6使用空闲内存的前部分作为指针域来指向下一页">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://icoty.github.io/2019/06/09/xv6-virtual-memory/memlayout">
+<meta property="og:image" content="https://icoty.github.io/2019/06/09/xv6-virtual-memory/V2P">
+<meta property="og:updated_time" content="2019-06-09T07:49:35.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="XV6源代码阅读-虚拟内存管理">
+<meta name="twitter:description" content="Exercise1 源代码阅读 内存管理部分: kalloc.c vm.c 以及相关其他文件代码   kalloc.c：char  kalloc(void)负责在需要的时候为用户空间、内核栈、页表页以及缓冲区分配物理内存，将物理地址转为虚拟地址返回，物理页大小为4k。void kfree(char  v)接收一个虚拟地址，找对对应的物理地址进行释放。xv6使用空闲内存的前部分作为指针域来指向下一页">
+<meta name="twitter:image" content="https://icoty.github.io/2019/06/09/xv6-virtual-memory/memlayout">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="荒野之萍" type="application/atom+xml">
+
+
+
+  
+  
+  <link rel="canonical" href="https://icoty.github.io/2019/06/09/xv6-virtual-memory/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>XV6源代码阅读-虚拟内存管理 | 荒野之萍</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">荒野之萍</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">忙着活或忙着死</p>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-首页">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-关于">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-标签">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-分类">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+
+      
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>搜索</a>
+        </li>
+      
+    </ul>
+  
+
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+  
+  
+
+  
+
+  <a href="https://github.com/icoty" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="external nofollow noopener noreferrer" target="_blank"><svg width="80" height="80" viewbox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"/><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"/><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"/></svg></a>
+
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://icoty.github.io/2019/06/09/xv6-virtual-memory/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="杨宇">
+      <meta itemprop="description" content="后台 / 系统">
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="荒野之萍">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">XV6源代码阅读-虚拟内存管理
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-06-09 03:18:06 / 修改时间：07:49:35" itemprop="dateCreated datePublished" datetime="2019-06-09T03:18:06+00:00">2019-06-09</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/操作系统/" itemprop="url" rel="index"><span itemprop="name">操作系统</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+              
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+            
+                <span class="post-meta-item-text">评论数：</span>
+                <a href="/2019/06/09/xv6-virtual-memory/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2019/06/09/xv6-virtual-memory/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="post-meta-item-icon">
+            <i class="fa fa-eye"></i>
+             阅读次数： 
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+            <div class="post-symbolscount">
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">本文字数：</span>
+                
+                <span title="本文字数">17k</span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">16 分钟</span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="Exercise1-源代码阅读"><a href="#Exercise1-源代码阅读" class="headerlink" title="Exercise1 源代码阅读"></a>Exercise1 源代码阅读</h2><ol>
+<li>内存管理部分: kalloc.c vm.c 以及相关其他文件代码</li>
+</ol>
+<ul>
+<li>kalloc.c：char <em> kalloc(void)负责在需要的时候为用户空间、内核栈、页表页以及缓冲区分配物理内存，将物理地址转为虚拟地址返回，物理页大小为4k。void kfree(char </em> v)接收一个虚拟地址，找对对应的物理地址进行释放。xv6使用空闲内存的前部分作为指针域来指向下一页空闲内存，物理内存管理是以页（4K）为单位进行分配的。物理内存空间上空闲的每一页，都有一个指针域（虚拟地址）指向下一个空闲页，最后一个空闲页为NULL ，通过这种方式，kmem只需要保存着虚拟地址空间上的freelist地址即可；</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">// kalloc.c</span><br><span class="line">// Physical memory allocator, intended to allocate</span><br><span class="line">// memory <span class="keyword">for</span> user processes, kernel stacks, page table pages,</span><br><span class="line">// and pipe buffers. Allocates 4096-byte pages.</span><br><span class="line"></span><br><span class="line">void freerange(void *vstart, void *vend);</span><br><span class="line">extern char end[]; // first address after kernel loaded from ELF file</span><br><span class="line"></span><br><span class="line">struct run &#123;</span><br><span class="line">  struct run *next;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">struct &#123;</span><br><span class="line">  struct spinlock lock;</span><br><span class="line">  int use_lock;</span><br><span class="line">  struct run *freelist;</span><br><span class="line">&#125; kmem;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>xv6让每个进程都有独立的页表结构，在切换进程时总是需要切换页表，switchkvm设置cr3寄存器的值为kpgdir首地址，kpgdir仅仅在scheduler内核线程中使用。页表和内核栈都是每个进程独有的，xv6使用结构体proc将它们统一起来，在进程切换的时候，他们也往往随着进程切换而切换，内核中模拟出了一个内核线程，它独占内核栈和内核页表kpgdir，它是所有进程调度的基础。switchuvm通过传入的proc结构负责切换相关的进程独有的数据结构，其中包括TSS相关的操作，然后将进程特有的页表载入cr3寄存器，完成设置进程相关的虚拟地址空间环境；</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">// vm.c</span><br><span class="line"></span><br><span class="line">……</span><br><span class="line"></span><br><span class="line">// Switch h/w page table register to the kernel-only page table,</span><br><span class="line">// <span class="keyword">for</span> when no process is running.</span><br><span class="line">void</span><br><span class="line">switchkvm(void)</span><br><span class="line">&#123;</span><br><span class="line">  lcr3(v2p(kpgdir));   // switch to the kernel page table</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// Switch TSS and h/w page table to correspond to process p.</span><br><span class="line">void</span><br><span class="line">switchuvm(struct proc *p)</span><br><span class="line">&#123;</span><br><span class="line">  pushcli();</span><br><span class="line">  cpu-&gt;gdt[SEG_TSS] = SEG16(STS_T32A, &amp;cpu-&gt;ts, sizeof(cpu-&gt;ts)-1, 0);</span><br><span class="line">  cpu-&gt;gdt[SEG_TSS].s = 0;</span><br><span class="line">  cpu-&gt;ts.ss0 = SEG_KDATA &lt;&lt; 3;</span><br><span class="line">  cpu-&gt;ts.esp0 = (uint)proc-&gt;kstack + KSTACKSIZE;</span><br><span class="line">  ltr(SEG_TSS &lt;&lt; 3);</span><br><span class="line">  <span class="keyword">if</span>(p-&gt;pgdir == 0)</span><br><span class="line">    panic(<span class="string">"switchuvm: no pgdir"</span>);</span><br><span class="line">  lcr3(v2p(p-&gt;pgdir));  // switch to new address space</span><br><span class="line">  popcli();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>进程的页表在使用前往往需要初始化，其中必须包含内核代码的映射，这样进程在进入内核时便不需要再次切换页表，进程使用虚拟地址空间的低地址部分，高地址部分留给内核，主要接口：<ul>
+<li>pde_t * setupkvm(void)通过kalloc分配一页内存作为页目录，然后将按照kmap数据结构映射内核虚拟地址空间到物理地址空间，期间调用了工具函数mappages；</li>
+<li>int allocuvm(pde_t * pgdir, uint oldsz, uint newsz)在设置页表的同时分配虚拟地址oldsz到newsz的以页为单位的内存；</li>
+<li>int deallocuvm(pde_t * pgdir, uint oldsz, uint newsz)则将newsz到oldsz对应的虚拟地址空间内存置为空闲；</li>
+<li>int loaduvm(pde_t <em> pgdir, char </em> addr, struct inode * ip, uint offset, uint sz)将文件系统上的i节点内容读取载入到相应的地址上，通过allocuvm接口为用户进程分配内存和设置页表，然后调用loaduvm接口将文件系统上的程序载入到内存，便能够为exec系统调用提供接口，为用户进程的正式运行做准备；</li>
+<li>当进程销毁需要回收内存时，调用void freevm(pde_t * pgdir)清除用户进程相关的内存环境，其首先调用将0到KERNBASE的虚拟地址空间回收，然后销毁整个进程的页表；</li>
+<li>pde_t <em> copyuvm(pde_t </em> pgdir, uint sz)负责复制一个新的页表并分配新的内存，新的内存布局和旧的完全一样，xv6使用这个函数作为fork()底层实现。</li>
+</ul>
+</li>
+</ul>
+<h2 id="Exercise2-带着问题阅读"><a href="#Exercise2-带着问题阅读" class="headerlink" title="Exercise2 带着问题阅读"></a>Exercise2 带着问题阅读</h2><ol>
+<li>XV6初始化之后到执行main.c时，内存布局是怎样的(其中已有哪些内容)?</li>
+</ol>
+<ul>
+<li><p>内核代码存在于物理地址低地址的0x100000处，页表为main.c文件中的entrypgdir数组，其中虚拟地址低4M映射物理地址低4M，虚拟地址 [KERNBASE, KERNBASE+4MB) 映射到 物理地址[0, 4MB)；</p>
+</li>
+<li><p>紧接着调用kinit1初始化内核末尾到物理内存4M的物理内存空间为未使用，然后调用kinit2初始化剩余内核空间到PHYSTOP为未使用。kinit1调用前使用的还是最初的页表（也就是是上面的内存布局），所以只能初始化4M，同时由于后期再构建新页表时也要使用页表转换机制来找到实际存放页表的物理内存空间，这就构成了自举问题，xv6通过在main函数最开始处释放内核末尾到4Mb的空间来分配页表，由于在最开始时多核CPU还未启动，所以没有设置锁机制。kinit2在内核构建了新页表后，能够完全访问内核的虚拟地址空间，所以在这里初始化所有物理内存，并开始了锁机制保护空闲内存链表；</p>
+</li>
+<li>然后main函数通过调用void kvmalloc(void)函数来实现内核新页表的初始化；</li>
+<li>最后内存布局和地址空间如下：内核末尾物理地址到物理地址PHYSTOP的内存空间未使用，虚拟地址空间KERNBASE以上部分映射到物理内存低地址相应位置。</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">// kalloc.c</span><br><span class="line">// Initialization happens <span class="keyword">in</span> two phases.</span><br><span class="line">// 1. main() calls kinit1() <span class="keyword">while</span> still using entrypgdir to place just</span><br><span class="line">// the pages mapped by entrypgdir on free list.</span><br><span class="line">// 2. main() calls kinit2() with the rest of the physical pages</span><br><span class="line">// after installing a full page table that maps them on all cores.</span><br><span class="line">void</span><br><span class="line">kinit1(void *vstart, void *vend)</span><br><span class="line">&#123;</span><br><span class="line">  initlock(&amp;kmem.lock, <span class="string">"kmem"</span>);</span><br><span class="line">  kmem.use_lock = 0;</span><br><span class="line">  freerange(vstart, vend);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void</span><br><span class="line">kinit2(void *vstart, void *vend)</span><br><span class="line">&#123;</span><br><span class="line">  freerange(vstart, vend);</span><br><span class="line">  kmem.use_lock = 1;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// kmap.c</span><br><span class="line">……</span><br><span class="line">// This table defines the kernel<span class="string">'s mappings, which are present in</span></span><br><span class="line"><span class="string">// every process'</span>s page table.</span><br><span class="line">static struct kmap &#123;</span><br><span class="line">  void *virt;</span><br><span class="line">  uint phys_start;</span><br><span class="line">  uint phys_end;</span><br><span class="line">  int perm;</span><br><span class="line">&#125; kmap[] = &#123;</span><br><span class="line"> &#123; (void*)KERNBASE, 0,             EXTMEM,    PTE_W&#125;, // I/O space</span><br><span class="line"> &#123; (void*)KERNLINK, V2P(KERNLINK), V2P(data), 0&#125;,     // kern text+rodata</span><br><span class="line"> &#123; (void*)data,     V2P(data),     PHYSTOP,   PTE_W&#125;, // kern data+memory</span><br><span class="line"> &#123; (void*)DEVSPACE, DEVSPACE,      0,         PTE_W&#125;, // more devices</span><br><span class="line">&#125;;</span><br><span class="line">……</span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li><p>XV6 的动态内存管理是如何完成的? 有一个kmem(链表)，用于管理可分配的物理内存页。(vend=0x00400000，也就是可分配的内存页最大为4Mb)<br>详见“Exercise 1  源代码阅读”部分，已经作出完整解答。</p>
+</li>
+<li><p>XV6的虚拟内存是如何初始化的? 画出XV6的虚拟内存布局图，请说出每一部分对应的内容是什么。见memlayout.h和vm.c的kmap上的注释?</p>
+</li>
+</ol>
+<ul>
+<li><p>main函数通过调用void kinit1(void <em> vstart, void </em> vend), void kinit2(void <em> vstart, void </em> vend), void kvmalloc(void)函数来实现内核新页表的初始化。虚拟地址与物理地址的转换接口：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">// memlayout.h</span><br><span class="line">// Memory layout</span><br><span class="line"></span><br><span class="line"><span class="comment">#define EXTMEM  0x100000            // Start of extended memory</span></span><br><span class="line"><span class="comment">#define PHYSTOP 0xE000000           // Top physical memory</span></span><br><span class="line"><span class="comment">#define DEVSPACE 0xFE000000         // Other devices are at high addresses</span></span><br><span class="line"></span><br><span class="line">// Key addresses <span class="keyword">for</span> address space layout (see kmap <span class="keyword">in</span> vm.c <span class="keyword">for</span> layout)</span><br><span class="line"><span class="comment">#define KERNBASE 0x80000000         // First kernel virtual address</span></span><br><span class="line"><span class="comment">#define KERNLINK (KERNBASE+EXTMEM)  // Address where kernel is linked</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#ifndef __ASSEMBLER__</span></span><br><span class="line"></span><br><span class="line">static inline uint v2p(void *a) &#123; <span class="built_in">return</span> ((uint) (a))  - KERNBASE; &#125;</span><br><span class="line">static inline void *p2v(uint a) &#123; <span class="built_in">return</span> (void *) ((a) + KERNBASE); &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">#endif</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#define V2P(a) (((uint) (a)) - KERNBASE)</span></span><br><span class="line"><span class="comment">#define P2V(a) (((void *) (a)) + KERNBASE)</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#define V2P_WO(x) ((x) - KERNBASE)    // same as V2P, but without casts</span></span><br><span class="line"><span class="comment">#define P2V_WO(x) ((x) + KERNBASE)    // same as V2P, but without casts</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>内存布局：</p>
+</li>
+</ul>
+<p><img src="/2019/06/09/xv6-virtual-memory/memlayout" alt="聊天窗口模型"></p>
+<ol start="4">
+<li>关于XV6 的内存页式管理。发生中断时，用哪个页表? 一个内存页是多大? 页目录有多少项? 页表有多少项? 最大支持多大的内存? 画出从虚拟地址到物理地址的转换图。在XV6中，是如何将虚拟地址与物理地址映射的(调用了哪些函数实现了哪些功能)?</li>
+</ol>
+<ul>
+<li>发生中断时，将换入cpu的进程的页表首地址存入cr3寄存器；一个内存页为4k；XV6页表采用的二级目录，一级目录有$2^{10}$条，二级目录有$2^{10} * 2^{10}$条；页表项为$2^2$Bytes，故页表有$2^{12} / 2^2 = 2^{10} = 1024$项；最大支持4G内存；</li>
+</ul>
+<p><img src="/2019/06/09/xv6-virtual-memory/V2P" alt="聊天窗口模型"></p>
+<ul>
+<li>物理内存页的申请与释放，虚拟地址与物理地址如何映射等在“Exercise 1  源代码阅读”都已经详述了，在此主要说下mappages接口，虚拟地址 <em> va与物理地址 </em> pa映射size个字节，同时赋予该页的权限perm，如下:</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">// vm.c</span><br><span class="line">……</span><br><span class="line">// Create PTEs <span class="keyword">for</span> virtual addresses starting at va that refer to</span><br><span class="line">// physical addresses starting at pa. va and size might not</span><br><span class="line">// be page-aligned.</span><br><span class="line">static int</span><br><span class="line">mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)</span><br><span class="line">&#123;</span><br><span class="line">  char *a, *last;</span><br><span class="line">  pte_t *pte;</span><br><span class="line">  </span><br><span class="line">  a = (char*)PGROUNDDOWN((uint)va);</span><br><span class="line">  last = (char*)PGROUNDDOWN(((uint)va) + size - 1);</span><br><span class="line">  <span class="keyword">for</span>(;;)&#123;</span><br><span class="line">    <span class="keyword">if</span>((pte = walkpgdir(pgdir, a, 1)) == 0)</span><br><span class="line">      <span class="built_in">return</span> -1;</span><br><span class="line">    <span class="keyword">if</span>(*pte &amp; PTE_P)</span><br><span class="line">      panic(<span class="string">"remap"</span>);</span><br><span class="line">    *pte = pa | perm | PTE_P;</span><br><span class="line">    <span class="keyword">if</span>(a == last)</span><br><span class="line">      <span class="built_in">break</span>;</span><br><span class="line">    a += PGSIZE;</span><br><span class="line">    pa += PGSIZE;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="built_in">return</span> 0;</span><br><span class="line">&#125;</span><br><span class="line">……</span><br></pre></td></tr></table></figure>
+<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><p>[1] <a href="https://www.cnblogs.com/hehao98/p/10683588.html" rel="external nofollow noopener noreferrer" target="_blank">xv6虚拟内存-博客园</a><br>[2] <a href="http://linbo.github.io/2017/10/01/xv6-vm" rel="external nofollow noopener noreferrer" target="_blank">xv6 virtual memory-hexo</a><br>[3] <a href="https://www.jianshu.com/p/13921afe0fde" rel="external nofollow noopener noreferrer" target="_blank">xv6内存管理-简书</a><br>[4] <a href="https://blog.csdn.net/qq_25426415/article/details/54633843" rel="external nofollow noopener noreferrer" target="_blank">xv6内存管理-CSDN</a></p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+    <div>
+     
+        <div>
+    
+        <div style="text-align:center;color: #ccc;font-size:14px;">-------------本文结束<i class="fa fa-paw"></i>感谢您的阅读-------------</div>
+    
+</div>
+
+      
+    </div>
+
+    <div>
+      
+        
+<div class="my_post_copyright">
+  <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+  <!-- JS库 sweetalert 可修改路径 -->
+  <script src="https://cdn.bootcss.com/jquery/2.0.0/jquery.min.js"></script>
+  <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+  <p><span>本文标题:</span><a href="/2019/06/09/xv6-virtual-memory/">XV6源代码阅读-虚拟内存管理</a></p>
+  <p><span>文章作者:</span><a href="/" title="访问 杨宇 的个人博客">杨宇</a></p>
+  <p><span>发布时间:</span>2019年06月09日 - 03:06</p>
+  <p><span>最后更新:</span>2019年06月09日 - 07:06</p>
+  <p><span>原始链接:</span><a href="/2019/06/09/xv6-virtual-memory/" title="XV6源代码阅读-虚拟内存管理">https://icoty.github.io/2019/06/09/xv6-virtual-memory/</a>
+    <span class="copy-path" title="点击复制文章链接"><i class="fa fa-clipboard" data-clipboard-text="https://icoty.github.io/2019/06/09/xv6-virtual-memory/" aria-label="复制成功！"></i></span>
+  </p>
+  <p><span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">署名-非商业性使用-禁止演绎 4.0 国际</a> 转载请保留原文链接及作者。</p>
+</div>
+<script>
+    var clipboard = new Clipboard('.fa-clipboard');
+    $(".fa-clipboard").click(function(){
+      clipboard.on('success', function(){
+        swal({
+          title: "",
+          text: '复制成功',
+          icon: "success",
+          showConfirmButton: true
+          });
+    });
+    });
+</script>
+
+
+      
+    </div>
+
+    
+
+    
+      
+    
+    
+      <div>
+        <div id="reward-container">
+  <div>打赏狗粮！</div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+
+    
+      
+      
+        
+      
+      <div style="display: inline-block">
+        <img src="/images/wechatpay.jpg" alt="杨宇 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+      
+      
+        
+      
+      <div style="display: inline-block">
+        <img src="/images/alipay.jpg" alt="杨宇 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/XV6/" rel="tag"><i class="fa fa-tag"></i> XV6</a>
+          
+            <a href="/tags/虚拟内存/" rel="tag"><i class="fa fa-tag"></i> 虚拟内存</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/09/xv6-interrupt-systemcall/" rel="next" title="XV6源代码阅读-中断与系统调用">
+                <i class="fa fa-chevron-left"></i> XV6源代码阅读-中断与系统调用
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="杨宇">
+            
+              <p class="site-author-name" itemprop="name">杨宇</p>
+              <div class="site-description motion-element" itemprop="description">后台 / 系统</div>
+          </div>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives">
+                
+                    <span class="site-state-item-count">17</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">15</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">55</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/icoty" title="GitHub &rarr; https://github.com/icoty" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://www.cnblogs.com/icoty23" title="博客园 &rarr; https://www.cnblogs.com/icoty23" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-spinner"></i>博客园</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://blog.csdn.net/qq_36347375" title="CSDN &rarr; https://blog.csdn.net/qq_36347375" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-copyright"></i>CSDN</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:icoty.yangy@gmail.com" title="E-mail &rarr; mailto:icoty.yangy@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-mail</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                友链
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://laibh.top" title="http://laibh.top" rel="external nofollow noopener noreferrer" target="_blank">赖同学</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Exercise1-源代码阅读"><span class="nav-number">1.</span> <span class="nav-text">Exercise1 源代码阅读</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Exercise2-带着问题阅读"><span class="nav-number">2.</span> <span class="nav-text">Exercise2 带着问题阅读</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文献"><span class="nav-number">3.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+      <iframe frameborder="no" border="0" marginwidth="0" marginheight="20" width="270" height="42" src="//music.163.com/outchain/player?type=0&id=2768835095&auto=0&height=32"></iframe>
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-heart" aria-hidden="true"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">杨宇</span>
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    
+      <span class="post-meta-item-text">站点总字数：</span>
+    
+    <span title="站点总字数">165k</span>
+  
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    
+    <span title="站点阅读时长">2:30</span>
+  
+</div>
+
+
+
+
+
+
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="post-meta-item-icon">
+      <i class="fa fa-user"></i>
+    </span>
+    <span class="site-uv" title="总访客量">
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+    </span>
+  
+
+  
+    <span class="post-meta-divider">|</span>
+  
+
+  
+    <span class="post-meta-item-icon">
+      <i class="fa fa-eye"></i>
+    </span>
+    <span class="site-pv" title="总访问量">
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.0"></script>
+
+  <script src="/js/motion.js?v=7.1.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.1.0"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.1.0"></script>
+
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.0"></script>
+<script src="/js/post-details.js?v=7.1.0"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.0"></script>
+
+
+  
+
+  
+
+  
+
+  
+  
+
+<script src="//cdn1.lncld.net/static/js/3.11.1/av-min.js"></script>
+
+
+
+<script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+
+<script>
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'zWlHCMwekbEgyjRmAxWLoIR4-gzGzoHsz',
+    appKey: 'LbfEX3cmne22ibHj9hcwButY',
+    placeholder: '欢迎探讨，留下你的邮箱能够收到我的回复喔！',
+    avatar: 'mm',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: '' || 'zh-cn'
+  });
+</script>
+
+
+
+
+  
+
+
+  
+  <script>
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url).replace(/\/{2,}/g, '/');
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x"></i></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x"></i></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+  
+    
+      <script type="text/x-mathjax-config">
+  
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') { next = next.nextSibling }
+        if (next && next.nodeName.toLowerCase() === 'br') { next.parentNode.removeChild(next) }
+      }
+    });
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      document.getElementById(all[i].inputID + '-Frame').parentNode.className += ' has-jax';
+    }
+  });
+</script>
+<script src="//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    
+  
+
+
+  
+
+  
+<script>
+if ($('body').find('pre.mermaid').length) {
+  $.ajax({
+    type: 'GET',
+    url: '//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js',
+    dataType: 'script',
+    cache: true,
+    success: function() {
+      mermaid.initialize({
+        theme: 'forest',
+        logLevel: 3,
+        flowchart: { curve: 'linear' },
+        gantt: { axisFormat: '%m/%d/%Y' },
+        sequence: { actorMargin: 50 }
+      });
+    }
+  });
+}
+</script>
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

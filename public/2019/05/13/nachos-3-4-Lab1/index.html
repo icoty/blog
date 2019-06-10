@@ -1,0 +1,1707 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.1.0',
+    sidebar: {"position":"left","width":240,"display":"always","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="Nachos是什么Nachos (Not Another Completely Heuristic Operating System)，是一个教学用操作系统，提供了操作系统框架：   线程 中断 虚拟内存（位图管理所有物理页，虚拟地址与物理地址之间的转换等） 同步与互斥机制（锁、条件变量、信号量），读者写者问题，生产者消费者问题，BARRIER问题等 线程调度（基于优先级可抢占式调度，时间片轮转算">
+<meta name="keywords" content="Nachos-3.4,PCB">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Nachos-Lab1-完善线程机制">
+<meta property="og:url" content="https://icoty.github.io/2019/05/13/nachos-3-4-Lab1/index.html">
+<meta property="og:site_name" content="荒野之萍">
+<meta property="og:description" content="Nachos是什么Nachos (Not Another Completely Heuristic Operating System)，是一个教学用操作系统，提供了操作系统框架：   线程 中断 虚拟内存（位图管理所有物理页，虚拟地址与物理地址之间的转换等） 同步与互斥机制（锁、条件变量、信号量），读者写者问题，生产者消费者问题，BARRIER问题等 线程调度（基于优先级可抢占式调度，时间片轮转算">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://icoty.github.io/2019/05/13/nachos-3-4-Lab1/structure.png">
+<meta property="og:image" content="https://icoty.github.io/2019/05/13/nachos-3-4-Lab1/runlogical.png">
+<meta property="og:image" content="https://icoty.github.io/2019/05/13/nachos-3-4-Lab1/pcb.png">
+<meta property="og:updated_time" content="2019-05-23T00:03:55.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Nachos-Lab1-完善线程机制">
+<meta name="twitter:description" content="Nachos是什么Nachos (Not Another Completely Heuristic Operating System)，是一个教学用操作系统，提供了操作系统框架：   线程 中断 虚拟内存（位图管理所有物理页，虚拟地址与物理地址之间的转换等） 同步与互斥机制（锁、条件变量、信号量），读者写者问题，生产者消费者问题，BARRIER问题等 线程调度（基于优先级可抢占式调度，时间片轮转算">
+<meta name="twitter:image" content="https://icoty.github.io/2019/05/13/nachos-3-4-Lab1/structure.png">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="荒野之萍" type="application/atom+xml">
+
+
+
+  
+  
+  <link rel="canonical" href="https://icoty.github.io/2019/05/13/nachos-3-4-Lab1/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>Nachos-Lab1-完善线程机制 | 荒野之萍</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">荒野之萍</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">忙着活或忙着死</p>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-首页">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-关于">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-标签">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-分类">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+
+      
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>搜索</a>
+        </li>
+      
+    </ul>
+  
+
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+  
+  
+
+  
+
+  <a href="https://github.com/icoty" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="external nofollow noopener noreferrer" target="_blank"><svg width="80" height="80" viewbox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"/><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"/><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"/></svg></a>
+
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://icoty.github.io/2019/05/13/nachos-3-4-Lab1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="杨宇">
+      <meta itemprop="description" content="后台 / 系统">
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="荒野之萍">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Nachos-Lab1-完善线程机制
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-05-13 05:20:11" itemprop="dateCreated datePublished" datetime="2019-05-13T05:20:11+00:00">2019-05-13</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-05-23 00:03:55" itemprop="dateModified" datetime="2019-05-23T00:03:55+00:00">2019-05-23</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/操作系统/" itemprop="url" rel="index"><span itemprop="name">操作系统</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+              
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+            
+                <span class="post-meta-item-text">评论数：</span>
+                <a href="/2019/05/13/nachos-3-4-Lab1/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2019/05/13/nachos-3-4-Lab1/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="post-meta-item-icon">
+            <i class="fa fa-eye"></i>
+             阅读次数： 
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+            <div class="post-symbolscount">
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">本文字数：</span>
+                
+                <span title="本文字数">30k</span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">27 分钟</span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="Nachos是什么"><a href="#Nachos是什么" class="headerlink" title="Nachos是什么"></a>Nachos是什么</h2><p>Nachos (Not Another Completely Heuristic Operating System)，是一个教学用操作系统，提供了操作系统框架： </p>
+<ol>
+<li>线程</li>
+<li>中断</li>
+<li>虚拟内存（位图管理所有物理页，虚拟地址与物理地址之间的转换等）</li>
+<li>同步与互斥机制（锁、条件变量、信号量），读者写者问题，生产者消费者问题，BARRIER问题等</li>
+<li>线程调度（基于优先级可抢占式调度，时间片轮转算法，FIFO调度）</li>
+<li>文件系统</li>
+<li>系统调用</li>
+<li>机器指令、汇编指令、寄存器<br>……<br>Nachos模拟了一个MIPS模拟器，运行用户程序。</li>
+</ol>
+<p><img src="/2019/05/13/nachos-3-4-Lab1/structure.png" alt="structure"></p>
+<p><img src="/2019/05/13/nachos-3-4-Lab1/runlogical.png" alt="structure"></p>
+<h2 id="目录结构"><a href="#目录结构" class="headerlink" title="目录结构"></a>目录结构</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br></pre></td><td class="code"><pre><span class="line">.</span><br><span class="line">├── COPYRIGHT</span><br><span class="line">├── gnu-decstation-ultrix	// 交叉编译工具链</span><br><span class="line">├── nachos-3.4.zip	// 未经任何修改的源码和交叉编译工具，实验就是修改源码完善各个模块的功能</span><br><span class="line">├── README</span><br><span class="line">└── nachos-3.4	// 实验过程中完善的代码</span><br><span class="line">  ├── <span class="built_in">test</span>	// 该目录下编写用户自己的程序，需要修改Makfile添加自己的文件</span><br><span class="line">  ├── bin	// 用户自己的程序需要利用coff2noff转换，才能在nachos下跑起来</span><br><span class="line">  ├── filesys	// 文件系统管理</span><br><span class="line">  │   ├── directory.cc	// 目录文件，由目录项组成，目录项里记录了文件头所在扇区号</span><br><span class="line">  │   ├── directory.h</span><br><span class="line">  │   ├── filehdr.cc</span><br><span class="line">  │   ├── filehdr.h	// 文件头数据结构，通过索引记录了文件内容实际存储的所有扇区号</span><br><span class="line">  │   ├── filesys.cc	// 文件系统数据结构，创建/删除/读/写/修改/重命名/打开/关别等接口</span><br><span class="line">  │   ├── filesys.h</span><br><span class="line">  │   ├── fstest.cc</span><br><span class="line">  │   ├── Makefile</span><br><span class="line">  │   ├── openfile.cc	// 管理所有打开的文件句柄</span><br><span class="line">  │   ├── openfile.h</span><br><span class="line">  │   ├── synchdisk.cc	// 同步磁盘类，加锁保证互斥和文件系统的一致性</span><br><span class="line">  │   ├── synchdisk.h</span><br><span class="line">  │   └── <span class="built_in">test</span></span><br><span class="line">  ├── machine	// 机器硬件模拟</span><br><span class="line">  │   ├── console.cc	// 终端</span><br><span class="line">  │   ├── console.h</span><br><span class="line">  │   ├── disk.cc	// 磁盘</span><br><span class="line">  │   ├── disk.h</span><br><span class="line">  │   ├── interrupt.cc	// 中断处理器，利用FIFO维护一个中断队列</span><br><span class="line">  │   ├── interrupt.h</span><br><span class="line">  │   ├── timer.cc	// 模拟硬件时钟，用于时钟中断</span><br><span class="line">  │   ├── timer.h</span><br><span class="line">  │   ├── translate.cc	// 用户程序空间虚拟地址和物理之间的转换类</span><br><span class="line">  │   └── translate.h</span><br><span class="line">  ├── network	// 网络系统管理</span><br><span class="line">  │   ├── Makefile</span><br><span class="line">  │   ├── nettest.cc</span><br><span class="line">  │   ├── post.cc</span><br><span class="line">  │   ├── post.h</span><br><span class="line">  │   └── README</span><br><span class="line">  ├── threads	// 内核线程管理</span><br><span class="line">  │   ├── list.cc	// 工具模块 定义了链表结构及其操作</span><br><span class="line">  │   ├── list.h</span><br><span class="line">  │   ├── main.cc	// main入口，可以传入argv参数</span><br><span class="line">  │   ├── Makefile</span><br><span class="line">  │   ├── scheduler.cc	// 调度器，维护一个就绪的线程队列，时间片轮转/FIFO/优先级抢占</span><br><span class="line">  │   ├── scheduler.h</span><br><span class="line">  │   ├── stdarg.h</span><br><span class="line">  │   ├── switch.c	// 线程启动和调度模块</span><br><span class="line">  │   ├── switch.h</span><br><span class="line">  │   ├── switch-old.s</span><br><span class="line">  │   ├── switch.s	// 线程切换</span><br><span class="line">  │   ├── synch.cc	// 同步与互斥，锁/信号量/条件变量</span><br><span class="line">  │   ├── synch.dis</span><br><span class="line">  │   ├── synch.h</span><br><span class="line">  │   ├── synchlist.cc	// 类似于一个消息队列</span><br><span class="line">  │   ├── synchlist.h</span><br><span class="line">  │   ├── system.cc	// 主控模块</span><br><span class="line">  │   ├── system.h</span><br><span class="line">  │   ├── thread.cc	// 线程数据结构</span><br><span class="line">  │   ├── thread.h</span><br><span class="line">  │   ├── threadtest.cc	</span><br><span class="line">  │   ├── utility.cc</span><br><span class="line">  │   └── utility.h</span><br><span class="line">  ├── userprog	// 用户进程管理</span><br><span class="line">  │   ├── addrspace.cc	// 为noff文件的代码段/数据段分配空间，虚拟地址空间</span><br><span class="line">  │   ├── addrspace.h</span><br><span class="line">  │   ├── bitmap.cc	// 位图，用于管理扇区的分配和物理地址的分配</span><br><span class="line">  │   ├── bitmap.h</span><br><span class="line">  │   ├── exception.cc	// 异常处理</span><br><span class="line">  │   ├── Makefile</span><br><span class="line">  │   ├── progtest.cc	// 测试nachos是否可执行用户程序</span><br><span class="line">  │   └── syscall.h	// 系统调用</span><br><span class="line">  └── vm	// 虚拟内存管理</span><br><span class="line">  └── Makefile	// 多线程编译: make -j4</span><br><span class="line">  └── Makefile.common	// 各个模块公共的Makefile内容存放到这里面</span><br><span class="line">  └── Makefile.dep	// 依赖</span><br></pre></td></tr></table></figure>
+<h2 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h2><p>选择Linux或Unix系统，安装32位GCC开发环境，安装32的ubuntu。</p>
+<h2 id="源码获取"><a href="#源码获取" class="headerlink" title="源码获取"></a>源码获取</h2><p><a href="https://github.com/icoty/nachos-3.4-Lab" rel="external nofollow noopener noreferrer" target="_blank">https://github.com/icoty/nachos-3.4-Lab</a></p>
+<h2 id="内容一：总体概述"><a href="#内容一：总体概述" class="headerlink" title="内容一：总体概述"></a>内容一：总体概述</h2><p>本次Lab针对的内容是实现线程机制最基本的数据结构——进程控制块（PCB）。当一个进程创建时必然会生成一个相应的进程控制块，记录一些该线程特征，如进程ID、进程状态、进程优先级，进程开始运行时间，在cpu上已经运行了多少时间，程序计数器，SP指针，根目录和当前目录指针，文件描述符表，用户ID，组ID，指向代码段、数据段和栈段的指针等（当然，Nachos简化了进程控制块的内容）。实验的主要内容是修改和扩充PCB，主要难点在于发现修改PCB影响到的文件并进行修改。PCB是系统感知进程存在的唯一标志，且进程与PCB一一对应。可将PCB内部信息划分为：进程描述信息，进程控制信息，进程占有的资源和使用情况，进程的cpu现场。扩展字段如下：</p>
+<p><img src="/2019/05/13/nachos-3-4-Lab1/pcb.png" alt="structure"></p>
+<h2 id="内容二：任务完成情况"><a href="#内容二：任务完成情况" class="headerlink" title="内容二：任务完成情况"></a>内容二：任务完成情况</h2><h3 id="任务完成列表（Y-N）"><a href="#任务完成列表（Y-N）" class="headerlink" title="任务完成列表（Y/N）"></a>任务完成列表（Y/N）</h3><table>
+<thead>
+<tr>
+<th></th>
+<th>Exercise1</th>
+<th>Exercise2</th>
+<th>Exercise3</th>
+<th>Exercise4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>第一部分</td>
+<td>Y</td>
+<td>Y</td>
+<td>Y</td>
+<td>Y</td>
+</tr>
+</tbody>
+</table>
+<h3 id="具体Exercise的完成情况"><a href="#具体Exercise的完成情况" class="headerlink" title="具体Exercise的完成情况"></a>具体Exercise的完成情况</h3><h4 id="Exercise1-调研"><a href="#Exercise1-调研" class="headerlink" title="Exercise1  调研"></a>Exercise1  调研</h4><p>调研Linux或Windows中进程控制块（PCB）的基本实现方式，理解与Nachos的异同。</p>
+<p><strong>linux-4.19.23调研</strong>：Linux中的每一个进程由一个task_struct数据结构来描述。task_struct也就是PCB的数据结构。task_struct容纳了一个进程的所有信息，linux内核代码中的task_struct在linux-4.19.23/include/linux/sched.h内。</p>
+<p><strong>Linux内核进程状态</strong>：如下可分为运行态，可中断和不可中断态，暂停态，终止态，僵死状态，挂起状态等。</p>
+<p><strong>Linux内核进程调度</strong>：sched_info数据结构，包括被调度次数，等待时间，最后一次调度时间。<br><strong>vi linux-4.19.23/include/linux/sched.h</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">……</span><br><span class="line">/* Used <span class="keyword">in</span> tsk-&gt;state: */</span><br><span class="line"><span class="comment">#define TASK_RUNNING			0x0000	// 运行态</span></span><br><span class="line"><span class="comment">#define TASK_INTERRUPTIBLE		0x0001	// 可中断</span></span><br><span class="line"><span class="comment">#define TASK_UNINTERRUPTIBLE		0x0002	// 不可中断</span></span><br><span class="line"><span class="comment">#define __TASK_STOPPED			0x0004	</span></span><br><span class="line"><span class="comment">#define __TASK_TRACED			0x0008</span></span><br><span class="line">/* Used <span class="keyword">in</span> tsk-&gt;exit_state: */</span><br><span class="line"><span class="comment">#define EXIT_DEAD			0x0010</span></span><br><span class="line"><span class="comment">#define EXIT_ZOMBIE			0x0020	// 僵死态</span></span><br><span class="line"><span class="comment">#define EXIT_TRACE			(EXIT_ZOMBIE | EXIT_DEAD)</span></span><br><span class="line">/* Used <span class="keyword">in</span> tsk-&gt;state again: */</span><br><span class="line"><span class="comment">#define TASK_PARKED			0x0040</span></span><br><span class="line"><span class="comment">#define TASK_DEAD			0x0080</span></span><br><span class="line"><span class="comment">#define TASK_WAKEKILL			0x0100</span></span><br><span class="line"><span class="comment">#define TASK_WAKING			0x0200</span></span><br><span class="line"><span class="comment">#define TASK_NOLOAD			0x0400</span></span><br><span class="line"><span class="comment">#define TASK_NEW			0x0800</span></span><br><span class="line"><span class="comment">#define TASK_STATE_MAX			0x1000</span></span><br><span class="line">……</span><br><span class="line">……</span><br><span class="line">struct sched_info &#123;</span><br><span class="line"><span class="comment">#ifdef CONFIG_SCHED_INFO</span></span><br><span class="line">	/* Cumulative counters: */</span><br><span class="line"></span><br><span class="line">	/* <span class="comment"># of times we have run on this CPU: */</span></span><br><span class="line">	unsigned long			pcount;</span><br><span class="line"></span><br><span class="line">	/* Time spent waiting on a runqueue: */</span><br><span class="line">	unsigned long long		run_delay;</span><br><span class="line"></span><br><span class="line">	/* Timestamps: */</span><br><span class="line"></span><br><span class="line">	/* When did we last run on a CPU? */</span><br><span class="line">	unsigned long long		last_arrival;</span><br><span class="line"></span><br><span class="line">	/* When were we last queued to run? */</span><br><span class="line">	unsigned long long		last_queued;</span><br><span class="line"></span><br><span class="line"><span class="comment">#endif /* CONFIG_SCHED_INFO */</span></span><br><span class="line">&#125;;</span><br><span class="line">……</span><br></pre></td></tr></table></figure>
+<p><strong>时钟与锁</strong>：内核需要记录进程在其生存期内使用CPU的时间以便于统计、计费等有关操作。进程耗费CPU的时间由两部分组成：一是在用户态下耗费的时间，一是在系统态下耗费的时间。这类信息还包括进程剩余的时间片和定时器信息等，以控制相应事件的触发。</p>
+<p><strong>文件系统信息</strong>：进程可以打开或关闭文件，文件属于系统资源，Linux内核要对进程使用文件的情况进行记录。</p>
+<p><strong>虚拟内存信息</strong>：除了内核线程，每个进程都拥有自己的地址空间，Linux内核中用mm_struct结构来描述。</p>
+<p><strong>物理页管理信息</strong>：当物理内存不足时，Linux内存管理子系统需要把内存中部分页面交换到外存，并将产生PageFault的地址所在的页面调入内存，交换以页为单位。这部分结构记录了交换所用到的信息。</p>
+<p><strong>多处理器信息</strong>：与多处理器相关的几个域，每个处理器都维护了自己的一个进程调度队列，Linux内核中没有线程的概念，统一视为进程。</p>
+<p><strong>处理器上下文信息</strong>：当进程因等待某种资源而被挂起或停止运行时，处理机的状态必须保存在进程的task_struct，目的就是保存进程的当前上下文。当进程被调度重新运行时再从进程的task_struct中把上下文信息读入CPU（实际是恢复这些寄存器和堆栈的值），然后开始执行。</p>
+<p><strong>与Nachos的异同</strong>：Nachos相对于Linux系统的线程部分来讲，要简单许多。它的PCB仅有几个必须的变量，并且定义了一些最基本的对线程操作的函数。Nachos线程的总数目没有限制，线程的调度比较简单，而且没有实现线程的父子关系。很多地方需要完善。</p>
+<h4 id="Exercise2-源代码阅读"><a href="#Exercise2-源代码阅读" class="headerlink" title="Exercise2 源代码阅读"></a>Exercise2 源代码阅读</h4><p><strong>code/threads/main.cc</strong>：main.cc是整个nachos操作系统启动的入口，通过它可以直接调用操作系统的方法。通过程序中的main函数，配以不同的参数，可以调用Nachos操作系统不同部分的各个方法。 </p>
+<p><strong>code/threads/threadtest.cc</strong>：nachos内核线程测试部分，Fork两个线程，交替调用Yield()主动放弃CPU，执行循环体，会发现线程0和线程1刚好是交替执行。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><span class="line">int main(int argc, char **argv)</span><br><span class="line">&#123;</span><br><span class="line">  int argCount;			// the number of arguments </span><br><span class="line">  DEBUG(<span class="string">'t'</span>, <span class="string">"Entering main"</span>);</span><br><span class="line">  (void) Initialize(argc, argv);</span><br><span class="line"><span class="comment">#ifdef THREADS</span></span><br><span class="line">  <span class="keyword">for</span> (argc--, argv++; argc &gt; 0; argc -= argCount, argv += argCount) &#123;</span><br><span class="line">    argCount = 1;</span><br><span class="line">    switch (argv[0][1]) &#123;</span><br><span class="line">      <span class="keyword">case</span> <span class="string">'q'</span>:</span><br><span class="line">        testnum = atoi(argv[1]);</span><br><span class="line">        argCount++;</span><br><span class="line">        <span class="built_in">break</span>;</span><br><span class="line">      <span class="keyword">case</span> <span class="string">'T'</span>:</span><br><span class="line">        <span class="keyword">if</span>(argv[0][2] == <span class="string">'S'</span>)</span><br><span class="line">        testnum = 3;</span><br><span class="line">        <span class="built_in">break</span>;</span><br><span class="line">      default:</span><br><span class="line">        testnum = 1;</span><br><span class="line">        <span class="built_in">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  ThreadTest();</span><br><span class="line"><span class="comment">#endif</span></span><br><span class="line">	……</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">threadtest.cc</span><br><span class="line">// 线程主动让出cpu,在FIFO调度策略下能够看到多个线程按顺序运行</span><br><span class="line">void SimpleThread(int <span class="built_in">which</span>)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="keyword">for</span> (int num = 0; num &lt; 5; num++) &#123;</span><br><span class="line">    int ticks = stats-&gt;systemTicks - scheduler-&gt;getLastSwitchTick();</span><br><span class="line">    // 针对nachos内核线程的时间片轮转算法，判断时间片是否用完，如果用完主动让出cpu</span><br><span class="line">    <span class="keyword">if</span>(ticks &gt;= TimerSlice)&#123;</span><br><span class="line">    	currentThread-&gt;Yield();</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    // 多个线程同时执行该接口的话，会交替执行，交替让出cpu</span><br><span class="line">    // currentThread-&gt;Yield();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">root@yangyu-ubuntu-32:/mnt/nachos-3.4/code/threads<span class="comment"># </span></span><br><span class="line">root@yangyu-ubuntu-32:/mnt/nachos-3.4/code/threads<span class="comment"># ./nachos -q 1</span></span><br><span class="line">userId=0,threadId=0,prio=5,loop:0,lastSwitchTick=0,systemTicks=20,usedTicks=20,TimerSlice=30</span><br><span class="line">userId=0,threadId=1,prio=5,loop:0,lastSwitchTick=20,systemTicks=30,usedTicks=10,TimerSlice=30</span><br><span class="line">userId=0,threadId=0,prio=5,loop:1,lastSwitchTick=30,systemTicks=40,usedTicks=10,TimerSlice=30</span><br><span class="line">userId=0,threadId=1,prio=5,loop:1,lastSwitchTick=40,systemTicks=50,usedTicks=10,TimerSlice=30</span><br><span class="line">userId=0,threadId=0,prio=5,loop:2,lastSwitchTick=50,systemTicks=60,usedTicks=10,TimerSlice=30</span><br><span class="line">userId=0,threadId=1,prio=5,loop:2,lastSwitchTick=60,systemTicks=70,usedTicks=10,TimerSlice=30</span><br><span class="line">userId=0,threadId=0,prio=5,loop:3,lastSwitchTick=70,systemTicks=80,usedTicks=10,TimerSlice=30</span><br><span class="line">userId=0,threadId=1,prio=5,loop:3,lastSwitchTick=80,systemTicks=90,usedTicks=10,TimerSlice=30</span><br><span class="line">userId=0,threadId=0,prio=5,loop:4,lastSwitchTick=90,systemTicks=100,usedTicks=10,TimerSlice=30</span><br><span class="line">userId=0,threadId=1,prio=5,loop:4,lastSwitchTick=100,systemTicks=110,usedTicks=10,TimerSlice=30</span><br><span class="line">No threads ready or runnable, and no pending interrupts.</span><br><span class="line">Assuming the program completed.</span><br><span class="line">Machine halting!</span><br><span class="line"></span><br><span class="line">Ticks: total 130, idle 0, system 130, user 0</span><br><span class="line">Disk I/O: reads 0, writes 0</span><br><span class="line">Console I/O: reads 0, writes 0</span><br><span class="line">Paging: faults 0</span><br><span class="line">Network I/O: packets received 0, sent 0</span><br><span class="line"></span><br><span class="line">Cleaning up...</span><br></pre></td></tr></table></figure>
+<p><strong>code/threads/thread.h</strong>：这部分定义了管理Thread的数据结构，即Nachos中线程的上下文环境。主要包括当前线程栈顶指针，所有寄存器的状态，栈底，线程状态，线程名。当前栈指针和机器状态的定义必须必须放作为线程成员变量的前两个，因为Nachos执行线程切换时，会按照这个顺序找到线程的起始位置，然后操作线程上下文内存和寄存器。在Thread类中还声明了一些基本的方法，如Fork()、Yield()、Sleep()等等，由于这些方法的作用根据名字已经显而易见了，在此不再赘述。 </p>
+<p><strong>code/threads/thread.cc</strong>： Thread.cc中主要是管理Thread的一些事务。主要接口如下：</p>
+<ul>
+<li>Fork(VoidFunctionPtr func,int arg)：func是新线程运行的函数，arg是func函数的入参，Fork的实现包括分为几步：分配一个堆栈，初始化堆栈，将线程放入就绪队列。</li>
+<li>Finish()：不是直接收回线程的数据结构和堆栈，因为当前仍在这个堆栈上运行这个线程。先将threadToBeDestroyed的值设为当前线程，在Scheduler的Run()内切换到新的线程时在销毁threadToBeDestroyed。Yield()、Sleep()。这里实现的方法大多是都是原子操作，在方法的一开始保存中断层次关闭中断，并在最后恢复原状态。</li>
+<li>Yield()：当前线程放入就绪队列，从scheduler就绪队列中的找到下一个线程上cpu，以达到放弃CPU的效果。</li>
+</ul>
+<h4 id="Exercise3-扩展线程的数据结构"><a href="#Exercise3-扩展线程的数据结构" class="headerlink" title="Exercise3 扩展线程的数据结构"></a>Exercise3 扩展线程的数据结构</h4><h4 id="Exercise4-增加全局线程管理机制"><a href="#Exercise4-增加全局线程管理机制" class="headerlink" title="Exercise4 增加全局线程管理机制"></a>Exercise4 增加全局线程管理机制</h4><p>这里我把Exercise3和Exercise4放在一起完成。</p>
+<ul>
+<li><p>在Thread类中添加私有成员userId和threadId，添加公有接口getUserId()和getThreadId()，userId直接沿用Linux个getuid()接口。</p>
+</li>
+<li><p>system.h内部添加全局变量maxThreadsCount=128，全局数组threads[maxThreadsCount]，每创建一个线程判断并分配threadId。</p>
+</li>
+<li><p><strong>-TS</strong>模仿Linux的PS命令打印所有线程信息，仔细阅读list.cc代码和scheduler.cc的代码，就会发现可以直接用scheduler.cc::Print()接口，不用我们重新造轮子。</p>
+</li>
+<li><p>在system.cc中的void Initialize(<strong>int</strong> argc, <strong>char</strong> argv)函数体对全局数组初始化。如下我用root用户执行分配的userId为0，切换到其他用户userId会发生变化，线程id分别为0和1。当线程数超过128个线程时，ASSERT断言报错。</p>
+</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line">threadtest.cc：</span><br><span class="line">void ThreadTest()</span><br><span class="line">&#123;</span><br><span class="line">  switch (testnum) &#123;</span><br><span class="line">    <span class="keyword">case</span> 1:</span><br><span class="line">    ThreadTest1();</span><br><span class="line">    <span class="built_in">break</span>;</span><br><span class="line">  <span class="keyword">case</span> 2:</span><br><span class="line">    ThreadCountLimitTest();</span><br><span class="line">    <span class="built_in">break</span>;</span><br><span class="line">  <span class="keyword">case</span> 3:</span><br><span class="line">    ThreadPriorityTest();</span><br><span class="line">    <span class="built_in">break</span>;</span><br><span class="line">  <span class="keyword">case</span> 4:</span><br><span class="line">    ThreadProducerConsumerTest();</span><br><span class="line">    <span class="built_in">break</span>;</span><br><span class="line">  <span class="keyword">case</span> 5:</span><br><span class="line">    ThreadProducerConsumerTest1();</span><br><span class="line">    <span class="built_in">break</span>;</span><br><span class="line">  <span class="keyword">case</span> 6:</span><br><span class="line">    barrierThreadTest();</span><br><span class="line">    <span class="built_in">break</span>;</span><br><span class="line">  <span class="keyword">case</span> 7:</span><br><span class="line">    readWriteThreadTest();</span><br><span class="line">    <span class="built_in">break</span>;</span><br><span class="line">  default:</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"No test specified.\n"</span>);</span><br><span class="line">    <span class="built_in">break</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 线程最多128个，超过128个终止运行</span><br><span class="line">void ThreadCountLimitTest()</span><br><span class="line">&#123;</span><br><span class="line">  <span class="keyword">for</span> (int i = 0; i &lt;= maxThreadsCount; ++i) &#123;</span><br><span class="line">    Thread* t = new Thread(<span class="string">"fork thread"</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"thread name = %s, userId = %d, threadId = %d\n"</span>, t-&gt;getName(), t-&gt;getUserId(), t-&gt;getThreadId());</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">root@yangyu-ubuntu-32:/mnt/nachos-3.4/code/threads<span class="comment"># ./nachos -TS</span></span><br><span class="line">thread name = fork thread, userId = 0, threadId = 1</span><br><span class="line">thread name = fork thread, userId = 0, threadId = 2</span><br><span class="line">thread name = fork thread, userId = 0, threadId = 3</span><br><span class="line">……</span><br><span class="line">thread name = fork thread, userId = 0, threadId = 122</span><br><span class="line">thread name = fork thread, userId = 0, threadId = 123</span><br><span class="line">thread name = fork thread, userId = 0, threadId = 124</span><br><span class="line">thread name = fork thread, userId = 0, threadId = 125</span><br><span class="line">thread name = fork thread, userId = 0, threadId = 126</span><br><span class="line">thread name = fork thread, userId = 0, threadId = 127</span><br><span class="line">allocatedThreadID fail, maxThreadsCount:[128]</span><br><span class="line">Assertion failed: line 73, file <span class="string">"../threads/thread.cc"</span></span><br><span class="line">Aborted (core dumped)</span><br><span class="line">root@yangyu-ubuntu-32:/mnt/nachos-3.4/code/threads<span class="comment">#</span></span><br></pre></td></tr></table></figure>
+<h2 id="内容三：遇到的困难以及解决方法"><a href="#内容三：遇到的困难以及解决方法" class="headerlink" title="内容三：遇到的困难以及解决方法"></a>内容三：遇到的困难以及解决方法</h2><h3 id="困难1"><a href="#困难1" class="headerlink" title="困难1"></a>困难1</h3><p>开始make编译出错，通过定位到具体行，复制出来手动执行，发现是gcc交叉编译工具链路径不对。</p>
+<h3 id="困难2"><a href="#困难2" class="headerlink" title="困难2"></a>困难2</h3><p>刚开始修改代码验证效果，重定义错误，外部文件全局变量使用方式不对导致。</p>
+<h2 id="内容四：收获及感想"><a href="#内容四：收获及感想" class="headerlink" title="内容四：收获及感想"></a>内容四：收获及感想</h2><p>动手实践很重要，不管你是做什么事、什么项目、什么作业，一定要落实到代码和跑到程序上面来。绝知此事要躬行，学习来不得半点虚假。</p>
+<h2 id="内容五：对课程的意见和建议"><a href="#内容五：对课程的意见和建议" class="headerlink" title="内容五：对课程的意见和建议"></a>内容五：对课程的意见和建议</h2><p>暂无。</p>
+<h2 id="内容六：参考文献"><a href="#内容六：参考文献" class="headerlink" title="内容六：参考文献"></a>内容六：参考文献</h2><p>暂无。</p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+    <div>
+     
+        <div>
+    
+        <div style="text-align:center;color: #ccc;font-size:14px;">-------------本文结束<i class="fa fa-paw"></i>感谢您的阅读-------------</div>
+    
+</div>
+
+      
+    </div>
+
+    <div>
+      
+        
+<div class="my_post_copyright">
+  <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+  <!-- JS库 sweetalert 可修改路径 -->
+  <script src="https://cdn.bootcss.com/jquery/2.0.0/jquery.min.js"></script>
+  <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+  <p><span>本文标题:</span><a href="/2019/05/13/nachos-3-4-Lab1/">Nachos-Lab1-完善线程机制</a></p>
+  <p><span>文章作者:</span><a href="/" title="访问 杨宇 的个人博客">杨宇</a></p>
+  <p><span>发布时间:</span>2019年05月13日 - 05:05</p>
+  <p><span>最后更新:</span>2019年05月23日 - 00:05</p>
+  <p><span>原始链接:</span><a href="/2019/05/13/nachos-3-4-Lab1/" title="Nachos-Lab1-完善线程机制">https://icoty.github.io/2019/05/13/nachos-3-4-Lab1/</a>
+    <span class="copy-path" title="点击复制文章链接"><i class="fa fa-clipboard" data-clipboard-text="https://icoty.github.io/2019/05/13/nachos-3-4-Lab1/" aria-label="复制成功！"></i></span>
+  </p>
+  <p><span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">署名-非商业性使用-禁止演绎 4.0 国际</a> 转载请保留原文链接及作者。</p>
+</div>
+<script>
+    var clipboard = new Clipboard('.fa-clipboard');
+    $(".fa-clipboard").click(function(){
+      clipboard.on('success', function(){
+        swal({
+          title: "",
+          text: '复制成功',
+          icon: "success",
+          showConfirmButton: true
+          });
+    });
+    });
+</script>
+
+
+      
+    </div>
+
+    
+
+    
+      
+    
+    
+      <div>
+        <div id="reward-container">
+  <div>打赏狗粮！</div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+
+    
+      
+      
+        
+      
+      <div style="display: inline-block">
+        <img src="/images/wechatpay.jpg" alt="杨宇 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+      
+      
+        
+      
+      <div style="display: inline-block">
+        <img src="/images/alipay.jpg" alt="杨宇 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Nachos-3-4/" rel="tag"><i class="fa fa-tag"></i> Nachos-3.4</a>
+          
+            <a href="/tags/PCB/" rel="tag"><i class="fa fa-tag"></i> PCB</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/04/25/stack-pv/" rel="next" title="另类P、V操作问题-详细图解">
+                <i class="fa fa-chevron-left"></i> 另类P、V操作问题-详细图解
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/14/nachos-3-4-Lab2/" rel="prev" title="Nachos-Lab2-线程调度模块实现">
+                Nachos-Lab2-线程调度模块实现 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="杨宇">
+            
+              <p class="site-author-name" itemprop="name">杨宇</p>
+              <div class="site-description motion-element" itemprop="description">后台 / 系统</div>
+          </div>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives">
+                
+                    <span class="site-state-item-count">17</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">15</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">55</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/icoty" title="GitHub &rarr; https://github.com/icoty" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://www.cnblogs.com/icoty23" title="博客园 &rarr; https://www.cnblogs.com/icoty23" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-spinner"></i>博客园</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://blog.csdn.net/qq_36347375" title="CSDN &rarr; https://blog.csdn.net/qq_36347375" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-copyright"></i>CSDN</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:icoty.yangy@gmail.com" title="E-mail &rarr; mailto:icoty.yangy@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-mail</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                友链
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://laibh.top" title="http://laibh.top" rel="external nofollow noopener noreferrer" target="_blank">赖同学</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Nachos是什么"><span class="nav-number">1.</span> <span class="nav-text">Nachos是什么</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#目录结构"><span class="nav-number">2.</span> <span class="nav-text">目录结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#环境"><span class="nav-number">3.</span> <span class="nav-text">环境</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#源码获取"><span class="nav-number">4.</span> <span class="nav-text">源码获取</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内容一：总体概述"><span class="nav-number">5.</span> <span class="nav-text">内容一：总体概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内容二：任务完成情况"><span class="nav-number">6.</span> <span class="nav-text">内容二：任务完成情况</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#任务完成列表（Y-N）"><span class="nav-number">6.1.</span> <span class="nav-text">任务完成列表（Y/N）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#具体Exercise的完成情况"><span class="nav-number">6.2.</span> <span class="nav-text">具体Exercise的完成情况</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Exercise1-调研"><span class="nav-number">6.2.1.</span> <span class="nav-text">Exercise1  调研</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Exercise2-源代码阅读"><span class="nav-number">6.2.2.</span> <span class="nav-text">Exercise2 源代码阅读</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Exercise3-扩展线程的数据结构"><span class="nav-number">6.2.3.</span> <span class="nav-text">Exercise3 扩展线程的数据结构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Exercise4-增加全局线程管理机制"><span class="nav-number">6.2.4.</span> <span class="nav-text">Exercise4 增加全局线程管理机制</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内容三：遇到的困难以及解决方法"><span class="nav-number">7.</span> <span class="nav-text">内容三：遇到的困难以及解决方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#困难1"><span class="nav-number">7.1.</span> <span class="nav-text">困难1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#困难2"><span class="nav-number">7.2.</span> <span class="nav-text">困难2</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内容四：收获及感想"><span class="nav-number">8.</span> <span class="nav-text">内容四：收获及感想</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内容五：对课程的意见和建议"><span class="nav-number">9.</span> <span class="nav-text">内容五：对课程的意见和建议</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内容六：参考文献"><span class="nav-number">10.</span> <span class="nav-text">内容六：参考文献</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+      <iframe frameborder="no" border="0" marginwidth="0" marginheight="20" width="270" height="42" src="//music.163.com/outchain/player?type=0&id=2768835095&auto=0&height=32"></iframe>
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-heart" aria-hidden="true"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">杨宇</span>
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    
+      <span class="post-meta-item-text">站点总字数：</span>
+    
+    <span title="站点总字数">165k</span>
+  
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    
+    <span title="站点阅读时长">2:30</span>
+  
+</div>
+
+
+
+
+
+
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="post-meta-item-icon">
+      <i class="fa fa-user"></i>
+    </span>
+    <span class="site-uv" title="总访客量">
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+    </span>
+  
+
+  
+    <span class="post-meta-divider">|</span>
+  
+
+  
+    <span class="post-meta-item-icon">
+      <i class="fa fa-eye"></i>
+    </span>
+    <span class="site-pv" title="总访问量">
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.0"></script>
+
+  <script src="/js/motion.js?v=7.1.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.1.0"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.1.0"></script>
+
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.0"></script>
+<script src="/js/post-details.js?v=7.1.0"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.0"></script>
+
+
+  
+
+  
+
+  
+
+  
+  
+
+<script src="//cdn1.lncld.net/static/js/3.11.1/av-min.js"></script>
+
+
+
+<script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+
+<script>
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'zWlHCMwekbEgyjRmAxWLoIR4-gzGzoHsz',
+    appKey: 'LbfEX3cmne22ibHj9hcwButY',
+    placeholder: '欢迎探讨，留下你的邮箱能够收到我的回复喔！',
+    avatar: 'mm',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: '' || 'zh-cn'
+  });
+</script>
+
+
+
+
+  
+
+
+  
+  <script>
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url).replace(/\/{2,}/g, '/');
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x"></i></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x"></i></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+  
+
+
+  
+
+  
+<script>
+if ($('body').find('pre.mermaid').length) {
+  $.ajax({
+    type: 'GET',
+    url: '//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js',
+    dataType: 'script',
+    cache: true,
+    success: function() {
+      mermaid.initialize({
+        theme: 'forest',
+        logLevel: 3,
+        flowchart: { curve: 'linear' },
+        gantt: { axisFormat: '%m/%d/%Y' },
+        sequence: { actorMargin: 50 }
+      });
+    }
+  });
+}
+</script>
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

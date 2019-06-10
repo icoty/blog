@@ -1,9 +1,12 @@
 ---
-title: 进程间通信-利用共享内存和管道通信实现聊天窗口
+title: 基于共享内存、信号、命名管道和Select模型实现聊天窗口
 date: 2019-04-18 00:16:06
-top: 5
-tags: [Linux, IPC, 共享内存, 命名管道, 信号, select]
-categories: [Programing]
+tags: [Linux, 共享内存, 命名管道, 信号, Select]
+categories:
+  - [IPC]
+  - [同步机制]
+  - [IO多路复用模型]
+copyright: true
 ---
 
 ### 问题模型
@@ -262,7 +265,7 @@ int main(int argc, char **argv)
 
 processA1.cpp：
 ``` bash
-#include "fuprintf("p:%s\n", p);nc.h"
+#include "func.h"
 
 int main(void)
 {
@@ -364,3 +367,4 @@ $ ipcs  # 查看共性内存资源数量
 ### 源码获取
 
 本文所有[源码链接](https://github.com/icoty/Linux/tree/master/IPC/chat)
+

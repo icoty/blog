@@ -1,0 +1,1698 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.1.0',
+    sidebar: {"position":"left","width":240,"display":"always","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="Exercise1 源代码阅读 启动部分: bootasm.S bootmain.c 和xv6初始化模块:main.c   bootasm.S 由16位和32位汇编混合编写成的XV6引导加载器。bootasm.S内的汇编代码会调用bootmain.c中的void bootmain(void)；main.c主函数内部初始化各模块； 当x86 PC启动时，它执行的是一个叫BIOS的程序。BIOS存放在">
+<meta name="keywords" content="XV6,中断,系统调用,中断描述符表IDT">
+<meta property="og:type" content="article">
+<meta property="og:title" content="XV6源代码阅读-中断与系统调用">
+<meta property="og:url" content="https://icoty.github.io/2019/06/09/xv6-interrupt-systemcall/index.html">
+<meta property="og:site_name" content="荒野之萍">
+<meta property="og:description" content="Exercise1 源代码阅读 启动部分: bootasm.S bootmain.c 和xv6初始化模块:main.c   bootasm.S 由16位和32位汇编混合编写成的XV6引导加载器。bootasm.S内的汇编代码会调用bootmain.c中的void bootmain(void)；main.c主函数内部初始化各模块； 当x86 PC启动时，它执行的是一个叫BIOS的程序。BIOS存放在">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-06-09T08:45:14.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="XV6源代码阅读-中断与系统调用">
+<meta name="twitter:description" content="Exercise1 源代码阅读 启动部分: bootasm.S bootmain.c 和xv6初始化模块:main.c   bootasm.S 由16位和32位汇编混合编写成的XV6引导加载器。bootasm.S内的汇编代码会调用bootmain.c中的void bootmain(void)；main.c主函数内部初始化各模块； 当x86 PC启动时，它执行的是一个叫BIOS的程序。BIOS存放在">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="荒野之萍" type="application/atom+xml">
+
+
+
+  
+  
+  <link rel="canonical" href="https://icoty.github.io/2019/06/09/xv6-interrupt-systemcall/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>XV6源代码阅读-中断与系统调用 | 荒野之萍</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">荒野之萍</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">忙着活或忙着死</p>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-首页">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-关于">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-标签">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-分类">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+
+      
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>搜索</a>
+        </li>
+      
+    </ul>
+  
+
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+  
+  
+
+  
+
+  <a href="https://github.com/icoty" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="external nofollow noopener noreferrer" target="_blank"><svg width="80" height="80" viewbox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"/><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"/><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"/></svg></a>
+
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://icoty.github.io/2019/06/09/xv6-interrupt-systemcall/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="杨宇">
+      <meta itemprop="description" content="后台 / 系统">
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="荒野之萍">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">XV6源代码阅读-中断与系统调用
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-06-09 03:17:35 / 修改时间：08:45:14" itemprop="dateCreated datePublished" datetime="2019-06-09T03:17:35+00:00">2019-06-09</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/操作系统/" itemprop="url" rel="index"><span itemprop="name">操作系统</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+              
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+            
+                <span class="post-meta-item-text">评论数：</span>
+                <a href="/2019/06/09/xv6-interrupt-systemcall/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2019/06/09/xv6-interrupt-systemcall/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="post-meta-item-icon">
+            <i class="fa fa-eye"></i>
+             阅读次数： 
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+            <div class="post-symbolscount">
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">本文字数：</span>
+                
+                <span title="本文字数">26k</span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">24 分钟</span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="Exercise1-源代码阅读"><a href="#Exercise1-源代码阅读" class="headerlink" title="Exercise1 源代码阅读"></a>Exercise1 源代码阅读</h2><ol>
+<li>启动部分: bootasm.S bootmain.c 和xv6初始化模块:main.c</li>
+</ol>
+<ul>
+<li>bootasm.S 由16位和32位汇编混合编写成的XV6引导加载器。bootasm.S内的汇编代码会调用bootmain.c中的void bootmain(void)；main.c主函数内部初始化各模块；</li>
+<li>当x86 PC启动时，它执行的是一个叫BIOS的程序。BIOS存放在非易失存储器中，BIOS的作用是在启动时进行硬件的准备工作，接着把控制权交给操作系统。具体来说，BIOS会把控制权交给从磁盘第0块引导扇区（用于引导的磁盘的第一个512字节的数据区）加载的代码。引导扇区中包含引导加载器——负责内核加载到内存中。BIOS 会把引导扇区加载到内存 0x7c00 处，接着（通过设置寄存器 %ip）跳转至该地址。引导加载器开始执行后，处理器处于模拟Intel 8088处理器的模式下。而接下来的工作就是把处理器设置为现代的操作模式，并从磁盘中把 xv6内核载入到内存中，然后将控制权交给内核。</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Start the first CPU: switch to 32-bit protected mode, jump into C.</span></span><br><span class="line"><span class="comment"># The BIOS loads this code from the first sector of the hard disk into</span></span><br><span class="line"><span class="comment"># memory at physical address 0x7c00 and starts executing in real mode</span></span><br><span class="line"><span class="comment"># with %cs=0 %ip=7c00.</span></span><br><span class="line"></span><br><span class="line">.code16                       <span class="comment"># Assemble for 16-bit mode</span></span><br><span class="line">.globl start</span><br><span class="line">start:</span><br><span class="line">  cli                         <span class="comment"># BIOS enabled interrupts; disable</span></span><br><span class="line"></span><br><span class="line">  <span class="comment"># Zero data segment registers DS, ES, and SS.</span></span><br><span class="line">  xorw    %ax,%ax             <span class="comment"># Set %ax to zero</span></span><br><span class="line">  movw    %ax,%ds             <span class="comment"># -&gt; Data Segment</span></span><br><span class="line">  movw    %ax,%es             <span class="comment"># -&gt; Extra Segment</span></span><br><span class="line">  movw    %ax,%ss             <span class="comment"># -&gt; Stack Segment</span></span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li>中断与系统调用部分: trap.c trapasm.S vectors.S &amp; vectors.pl syscall.c sysproc.c proc.c 以及相关其他文件代码</li>
+</ol>
+<ul>
+<li>trap.c 陷入指令c语言处理接口，trapasm.S陷入指令的汇编逻辑；</li>
+<li>vector.S由vector.pl生成，中断描述符256个；</li>
+<li>proc.c 内部主要接口：static struct proc * allocproc(void)、void userinit(void)、int growproc(int n)、int fork(void)、void exit(void)、int wait(void)、void scheduler(void)、void yield(void)；</li>
+<li>syscall.c 内部定义了各种类型的系统调用函数，sysproc.c内部是与进程创建、退出等相关的系统调用函数的实现。</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line">// syscall.h  System call numbers</span><br><span class="line">……</span><br><span class="line"><span class="comment">#define SYS_fork    1</span></span><br><span class="line"><span class="comment">#define SYS_exit    2</span></span><br><span class="line"><span class="comment">#define SYS_wait    3</span></span><br><span class="line"><span class="comment">#define SYS_pipe    4</span></span><br><span class="line"><span class="comment">#define SYS_read    5</span></span><br><span class="line"><span class="comment">#define SYS_kill    6</span></span><br><span class="line"><span class="comment">#define SYS_exec    7</span></span><br><span class="line">……</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">// syscall.c 声明系统调用</span><br><span class="line">……</span><br><span class="line">extern int sys_chdir(void);</span><br><span class="line">extern int sys_close(void);</span><br><span class="line">extern int sys_dup(void);</span><br><span class="line">extern int sys_exec(void);</span><br><span class="line">extern int sys_exit(void);</span><br><span class="line">extern int sys_fork(void);</span><br><span class="line">extern int sys_fstat(void);</span><br><span class="line">extern int sys_getpid(void);</span><br><span class="line">extern int sys_kill(void);</span><br><span class="line">extern int sys_link(void);</span><br><span class="line">extern int sys_mkdir(void);</span><br><span class="line">extern int sys_mknod(void);</span><br><span class="line">extern int sys_open(void);</span><br><span class="line">……</span><br><span class="line"></span><br><span class="line">// sysproc.c 定义前面声明的系统调用接口</span><br><span class="line">int sys_fork(void)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="built_in">return</span> fork();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int sys_exit(void)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="built_in">exit</span>();</span><br><span class="line">  <span class="built_in">return</span> 0;  // not reached</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int sys_wait(void)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="built_in">return</span> <span class="built_in">wait</span>();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int sys_kill(void)</span><br><span class="line">&#123;</span><br><span class="line">  int pid;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span>(argint(0, &amp;pid) &lt; 0)</span><br><span class="line">    <span class="built_in">return</span> -1;</span><br><span class="line">  <span class="built_in">return</span> <span class="built_in">kill</span>(pid);</span><br><span class="line">&#125;</span><br><span class="line">……</span><br></pre></td></tr></table></figure>
+<h2 id="Exercise2-带着问题阅读"><a href="#Exercise2-带着问题阅读" class="headerlink" title="Exercise2 带着问题阅读"></a>Exercise2 带着问题阅读</h2><ol>
+<li>什么是用户态和内核态，两者有何区别? 什么是中断和系统调用，两者有何区别? 计算机在运行时，是如何确定当前处于用户态还是内核态的?</li>
+</ol>
+<ul>
+<li>当一个进程在执行用户自己的代码时处于用户运行态（用户态），此时特权级最低，为3级，是普通的用户进程运行的特权级，大部分用户直接面对的程序都是运行在用户态。Ring3状态不能访问Ring0的地址空间，包括代码和数据；当一个进程因为系统调用陷入内核代码中执行时处于内核运行态（内核态），此时特权级最高，为0级。执行的内核代码会使用当前进程的内核栈，每个进程都有自己的内核栈。用户运行一个程序，该程序创建的进程开始时运行自己的代码，处于用户态。如果要执行文件操作、网络数据发送等操作必须通过write、send等系统调用，这些系统调用会调用内核的代码。进程会切换到Ring0，从而进入内核地址空间去执行内核代码来完成相应的操作。内核态的进程执行完后又会切换到Ring3，回到用户态。这样，用户态的程序就不能随意操作内核地址空间，具有一定的安全保护作用。这说的保护模式是指通过内存页表操作等机制，保证进程间的地址空间不会互相冲突，一个进程的操作不会修改另一个进程地址空间中的数据；</li>
+<li>系统调用需要借助于中断机制来实现。两者都是从同一个异常处理入口开始，但是系统调用会一开始让CPU进入内核模式且使能中断，然后从系统调用表中取得相应的注册函数调用之；而中断处理则让CPU进入内核模式且disable中断。所以系统调用的真实处理（系统调用表中的注册函数执行）中可以阻塞，而中断处理的上半部不可以。所以在写驱动代码如字符设备驱动，实现读操作时是可以让其sleep的（比如没有数据时候，用户设置读模式是阻塞型的）。另一方面，如果该驱动读操作过于耗时也是不可取的，它在内核态中执行，这个时候只有中断的优先级比它高，其它的高优先级线程将不能得到及时调度执行；</li>
+<li>用户态和内核态的特权级不同，因此可以通过特全级判断当前处于用户态还是内核态。</li>
+</ul>
+<ol start="2">
+<li>计算机开始运行阶段就有中断吗? XV6 的中断管理是如何初始化的? XV6 是如何实现内核态到用户态的转变的? XV6 中的硬件中断是如何开关的? 实际的计算机里，中断有哪几种?</li>
+</ol>
+<ul>
+<li>计算机开始运行阶段就有BIOS支持的中断；</li>
+<li>由于xv6在开始运行阶段没有初始化中断处理程序，于是xv6在bootasm.S中用cli命令禁止中断发生。xv6的终端管理初始化各部分通过main.c中的main()函数调用。picinit()和oapicinit()初始化可编程中断控制器，consoleinit()和uartinit()设置了I/O、设备端口的中断。接着，tvinit()调用trap.c中的代码初始化中断描述符表，关联vectors.S中的中断IDT表项，在调度开始前调用idtinit()设置32号时钟中断，最后在scheduler()中调用sti()开中断，完成中断管理初始化；</li>
+<li>xv6在proc.c中的userinit()函数中，通过设置第一个进程的tf(trap frame)中cs ds es ss处于DPL_USER(用户模式) 完成第一个用户态进程的设置，然后在scheduler中进行初始化该进程页表、切换上下文等操作，最终第一个进程调用trapret，而此时第一个进程构造的tf中保存的寄存器转移到CPU中，设置了 %cs 的低位，使得进程的用户代码运行在 CPL = 3 的情况下，完成内核态到用户态的转变；</li>
+<li>xv6的硬件中断由picirq.c ioapic.c timer.c中的代码对可编程中断控制器进行设置和管理，比如通过调用ioapicenable控制IOAPIC中断。处理器可以通过设置 eflags 寄存器中的 IF 位来控制自己是否想要收到中断，xv6中通过命令cli关中断，sti开中断；</li>
+<li>中断的种类有：程序性中断：程序性质的错误等，如用户态下直接使用特权指令；外中断: 中央处理的外部装置引发，如时钟中断；I/O中断: 输入输出设备正常结束或发生错误时引发，如读取磁盘完成；硬件故障中断: 机器发生故障时引发，如电源故障；访管中断: 对操作系统提出请求时引发，如读写文件。</li>
+</ul>
+<ol start="3">
+<li>什么是中断描述符，中断描述符表（IDT）? 在XV6里是用什么数据结构表示的?</li>
+</ol>
+<ul>
+<li>中断描述符表的每一项是一个中断描述符，在x86系统中，中断处理程序定义存储在IDT中。XV6的IDT有256个入口点，每个入口点中对应的处理程序不同，在出发trap时，只要找到对应编号的入口，就能得到对应的处理程序；</li>
+<li>XV6中的数据结构中中断描述符用struct gatedesc表示：</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">// trap.c</span><br><span class="line"><span class="comment"># generated by vectors.pl - do not edit</span></span><br><span class="line"><span class="comment"># handlers</span></span><br><span class="line">.globl alltraps</span><br><span class="line">.globl vector0</span><br><span class="line">vector0:</span><br><span class="line">  pushl <span class="variable">$0</span></span><br><span class="line">  pushl <span class="variable">$0</span></span><br><span class="line">  jmp alltraps</span><br><span class="line">.globl vector1</span><br><span class="line">vector1:</span><br><span class="line">  pushl <span class="variable">$0</span></span><br><span class="line">  pushl <span class="variable">$1</span></span><br><span class="line">  jmp alltraps</span><br><span class="line">.globl vector2</span><br><span class="line">……</span><br></pre></td></tr></table></figure>
+<ul>
+<li>alltraps继续保存处理器的寄存器，设置数据和CPU段，然后压入 %esp，调用trap，到此时已完成用户态到内核态的转变；</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">// trapasm.S</span><br><span class="line">  <span class="comment"># vectors.S sends all traps here.</span></span><br><span class="line">.globl alltraps</span><br><span class="line">alltraps:</span><br><span class="line">  <span class="comment"># Build trap frame.</span></span><br><span class="line">  pushl %ds</span><br><span class="line">  pushl %es</span><br><span class="line">  pushl %fs</span><br><span class="line">  pushl %gs</span><br><span class="line">  pushal</span><br><span class="line">  </span><br><span class="line">  <span class="comment"># Set up data and per-cpu segments. 设置数据和CPU段</span></span><br><span class="line">  movw $(SEG_KDATA&lt;&lt;3), %ax</span><br><span class="line">  movw %ax, %ds</span><br><span class="line">  movw %ax, %es</span><br><span class="line">  movw $(SEG_KCPU&lt;&lt;3), %ax</span><br><span class="line">  movw %ax, %fs</span><br><span class="line">  movw %ax, %gs</span><br><span class="line"></span><br><span class="line">  <span class="comment"># Call trap(tf), where tf=%esp 压入 %esp</span></span><br><span class="line">  pushl %esp  <span class="comment"># 调用trap</span></span><br><span class="line">  call <span class="built_in">trap</span></span><br><span class="line">  addl <span class="variable">$4</span>, %esp</span><br></pre></td></tr></table></figure>
+<ul>
+<li>trap会根据%esp指向对应的tf，首先根据trapno判断该中断是否是系统调用，之后判断硬件中断，由于除零不是以上两种，于是判断为代码错误中断，并且是发生在用户空间的。接着处理程序将该进程标记为killed，并退出，继续下一个进程的调度；</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">// trap.c</span><br><span class="line">//PAGEBREAK: 41</span><br><span class="line">void <span class="built_in">trap</span>(struct trapframe *tf)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="keyword">if</span>(tf-&gt;trapno == T_SYSCALL)&#123; // 判断该中断是否为系统调用</span><br><span class="line">    <span class="keyword">if</span>(proc-&gt;killed)</span><br><span class="line">      <span class="built_in">exit</span>();</span><br><span class="line">    proc-&gt;tf = tf;</span><br><span class="line">    syscall();</span><br><span class="line">    <span class="keyword">if</span>(proc-&gt;killed)</span><br><span class="line">      <span class="built_in">exit</span>();</span><br><span class="line">    <span class="built_in">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  switch(tf-&gt;trapno)&#123;</span><br><span class="line">  </span><br><span class="line">  ……</span><br><span class="line">  </span><br><span class="line">  // PAGEBREAK: 13  </span><br><span class="line">  // tf-&gt;trapno与其他<span class="keyword">case</span>语句对不上,除零被视为代码错误中断,进入这里杀掉进程</span><br><span class="line">  default: </span><br><span class="line">    <span class="keyword">if</span>(proc == 0 || (tf-&gt;cs&amp;3) == 0)&#123;</span><br><span class="line">      // In kernel, it must be our mistake.</span><br><span class="line">      cprintf(<span class="string">"unexpected trap %d from cpu %d eip %x (cr2=0x%x)\n"</span>,</span><br><span class="line">              tf-&gt;trapno, cpu-&gt;id, tf-&gt;eip, rcr2());</span><br><span class="line">      panic(<span class="string">"trap"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    // In user space, assume process misbehaved.  </span><br><span class="line">    cprintf(<span class="string">"pid %d %s: trap %d err %d on cpu %d "</span></span><br><span class="line">            <span class="string">"eip 0x%x addr 0x%x--kill proc\n"</span>,</span><br><span class="line">            proc-&gt;pid, proc-&gt;name, tf-&gt;trapno, tf-&gt;err, cpu-&gt;id, tf-&gt;eip, </span><br><span class="line">            rcr2());</span><br><span class="line">    proc-&gt;killed = 1;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  ……</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>涉及到的主要数据结构：中断描述符表IDT(trap.c +12)、（vi x86.h +150）、（vi vector.S）。</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">// trap.c</span><br><span class="line">// Interrupt descriptor table (shared by all CPUs).</span><br><span class="line">struct gatedesc idt[256];</span><br><span class="line">extern uint vectors[];  // <span class="keyword">in</span> vectors.S: array of 256 entry pointers</span><br><span class="line">……</span><br><span class="line"></span><br><span class="line">// x86.h</span><br><span class="line">//PAGEBREAK: 36</span><br><span class="line">// Layout of the <span class="built_in">trap</span> frame built on the stack by the</span><br><span class="line">// hardware and by trapasm.S, and passed to <span class="built_in">trap</span>().</span><br><span class="line">struct trapframe &#123;</span><br><span class="line">  // registers as pushed by pusha</span><br><span class="line">  uint edi;</span><br><span class="line">  uint esi;</span><br><span class="line">  uint ebp;</span><br><span class="line">  uint oesp;      // useless &amp; ignored</span><br><span class="line">  uint ebx;</span><br><span class="line">  uint edx;</span><br><span class="line">  uint ecx;</span><br><span class="line">  uint eax;</span><br><span class="line">  ……</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">// vector.S  0～255共256个</span><br><span class="line">vectors:</span><br><span class="line">  .long vector0</span><br><span class="line">  .long vector1</span><br><span class="line">  .long vector2</span><br><span class="line">  .long vector3</span><br><span class="line">  .long vector4</span><br><span class="line">  .long vector5</span><br><span class="line">  .long vector6</span><br><span class="line">  .long vector7</span><br><span class="line">  .long vector8</span><br><span class="line">  .long vector9</span><br><span class="line">  ……</span><br></pre></td></tr></table></figure>
+<ol start="4">
+<li>请以系统调用setrlimit(该系统调用的作用是设置资源使用限制)为例，叙述如何在XV6中实现一个系统调用。(提示:需要添加系统调用号，系统调用函数，用户接口等等)。</li>
+</ol>
+<ul>
+<li>在syscall.h中添加系统调用号 #define SYS_setrlimit 22；</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">// syscall.h</span><br><span class="line">……</span><br><span class="line"><span class="comment">#define SYS_mkdir  20</span></span><br><span class="line"><span class="comment">#define SYS_close  21</span></span><br><span class="line"><span class="comment">#define  SYS_setrlimit  22 // add by yangyu</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>在syscall.c中添加对应的处理程序的调用接口</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">// syscall.c</span><br><span class="line">……</span><br><span class="line">static int (*syscalls[])(void) = &#123;</span><br><span class="line">……</span><br><span class="line">[SYS_mkdir]   sys_mkdir,</span><br><span class="line">[SYS_close]   sys_close,</span><br><span class="line">[SYS_setrlimit]   SYS_setrlimit, // add by yangyu</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>在sysproc.c中添加系统调用函数int sys_setrlimit(void)，具体实现对于进程资源使用限制的设置；</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">// syspro.c</span><br><span class="line">……</span><br><span class="line">int sys_uptime(void)</span><br><span class="line">&#123;</span><br><span class="line">  uint xticks;</span><br><span class="line">  </span><br><span class="line">  acquire(&amp;tickslock);</span><br><span class="line">  xticks = ticks;</span><br><span class="line">  release(&amp;tickslock);</span><br><span class="line">  <span class="built_in">return</span> xticks;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 在这里面写逻辑,限制进程资源的使用</span><br><span class="line">int sys_setrlimit(void)</span><br><span class="line">&#123;</span><br><span class="line">    // to <span class="keyword">do</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>在user.h中声明系统调用接口int setrlimit(int resource, const struct rlimit * rlim)；</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">// syspro.c</span><br><span class="line">……</span><br><span class="line">// system calls</span><br><span class="line">int fork(void);</span><br><span class="line">int <span class="built_in">exit</span>(void) __attribute__((noreturn));</span><br><span class="line">…… // 调用该接口陷入内核执行系统调用</span><br><span class="line">int setrlimit(int resource, const struct rlimit *rlim);</span><br></pre></td></tr></table></figure>
+<ul>
+<li>在usys.S添加SYSCALL(setrlimit)。</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">// usys.S</span><br><span class="line">……</span><br><span class="line">SYSCALL(sleep)</span><br><span class="line">SYSCALL(uptime)</span><br><span class="line">SYSCALL(setrlimit)  // add by yangyu</span><br></pre></td></tr></table></figure>
+<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><p>[1] <a href="https://www.cnblogs.com/qiangua/articles/3794696.html" rel="external nofollow noopener noreferrer" target="_blank">xv6 idt初始化</a><br>[2] <a href="https://th0ar.gitbooks.io/xv6- chinese/content/content/chapter3.html" rel="external nofollow noopener noreferrer" target="_blank">xv6中文文档</a><br>[3] <a href="https://www.cnblogs.com/qiangua/articles/3794696.html" rel="external nofollow noopener noreferrer" target="_blank">xv6 alltraps</a><br>[4] <a href="http://ybin.cc/os/xv6-trap-and-interrupt/" rel="external nofollow noopener noreferrer" target="_blank">xv6 trap/interrupt</a></p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+    <div>
+     
+        <div>
+    
+        <div style="text-align:center;color: #ccc;font-size:14px;">-------------本文结束<i class="fa fa-paw"></i>感谢您的阅读-------------</div>
+    
+</div>
+
+      
+    </div>
+
+    <div>
+      
+        
+<div class="my_post_copyright">
+  <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+  <!-- JS库 sweetalert 可修改路径 -->
+  <script src="https://cdn.bootcss.com/jquery/2.0.0/jquery.min.js"></script>
+  <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+  <p><span>本文标题:</span><a href="/2019/06/09/xv6-interrupt-systemcall/">XV6源代码阅读-中断与系统调用</a></p>
+  <p><span>文章作者:</span><a href="/" title="访问 杨宇 的个人博客">杨宇</a></p>
+  <p><span>发布时间:</span>2019年06月09日 - 03:06</p>
+  <p><span>最后更新:</span>2019年06月09日 - 08:06</p>
+  <p><span>原始链接:</span><a href="/2019/06/09/xv6-interrupt-systemcall/" title="XV6源代码阅读-中断与系统调用">https://icoty.github.io/2019/06/09/xv6-interrupt-systemcall/</a>
+    <span class="copy-path" title="点击复制文章链接"><i class="fa fa-clipboard" data-clipboard-text="https://icoty.github.io/2019/06/09/xv6-interrupt-systemcall/" aria-label="复制成功！"></i></span>
+  </p>
+  <p><span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">署名-非商业性使用-禁止演绎 4.0 国际</a> 转载请保留原文链接及作者。</p>
+</div>
+<script>
+    var clipboard = new Clipboard('.fa-clipboard');
+    $(".fa-clipboard").click(function(){
+      clipboard.on('success', function(){
+        swal({
+          title: "",
+          text: '复制成功',
+          icon: "success",
+          showConfirmButton: true
+          });
+    });
+    });
+</script>
+
+
+      
+    </div>
+
+    
+
+    
+      
+    
+    
+      <div>
+        <div id="reward-container">
+  <div>打赏狗粮！</div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+
+    
+      
+      
+        
+      
+      <div style="display: inline-block">
+        <img src="/images/wechatpay.jpg" alt="杨宇 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+      
+      
+        
+      
+      <div style="display: inline-block">
+        <img src="/images/alipay.jpg" alt="杨宇 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/XV6/" rel="tag"><i class="fa fa-tag"></i> XV6</a>
+          
+            <a href="/tags/中断/" rel="tag"><i class="fa fa-tag"></i> 中断</a>
+          
+            <a href="/tags/系统调用/" rel="tag"><i class="fa fa-tag"></i> 系统调用</a>
+          
+            <a href="/tags/中断描述符表IDT/" rel="tag"><i class="fa fa-tag"></i> 中断描述符表IDT</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/06/09/xv6-process-thread/" rel="next" title="XV6源代码阅读-进程线程">
+                <i class="fa fa-chevron-left"></i> XV6源代码阅读-进程线程
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/09/xv6-virtual-memory/" rel="prev" title="XV6源代码阅读-虚拟内存管理">
+                XV6源代码阅读-虚拟内存管理 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="杨宇">
+            
+              <p class="site-author-name" itemprop="name">杨宇</p>
+              <div class="site-description motion-element" itemprop="description">后台 / 系统</div>
+          </div>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives">
+                
+                    <span class="site-state-item-count">17</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">15</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">55</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/icoty" title="GitHub &rarr; https://github.com/icoty" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://www.cnblogs.com/icoty23" title="博客园 &rarr; https://www.cnblogs.com/icoty23" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-spinner"></i>博客园</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://blog.csdn.net/qq_36347375" title="CSDN &rarr; https://blog.csdn.net/qq_36347375" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-copyright"></i>CSDN</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:icoty.yangy@gmail.com" title="E-mail &rarr; mailto:icoty.yangy@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-mail</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                友链
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://laibh.top" title="http://laibh.top" rel="external nofollow noopener noreferrer" target="_blank">赖同学</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Exercise1-源代码阅读"><span class="nav-number">1.</span> <span class="nav-text">Exercise1 源代码阅读</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Exercise2-带着问题阅读"><span class="nav-number">2.</span> <span class="nav-text">Exercise2 带着问题阅读</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文献"><span class="nav-number">3.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+      <iframe frameborder="no" border="0" marginwidth="0" marginheight="20" width="270" height="42" src="//music.163.com/outchain/player?type=0&id=2768835095&auto=0&height=32"></iframe>
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-heart" aria-hidden="true"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">杨宇</span>
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    
+      <span class="post-meta-item-text">站点总字数：</span>
+    
+    <span title="站点总字数">165k</span>
+  
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    
+    <span title="站点阅读时长">2:30</span>
+  
+</div>
+
+
+
+
+
+
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="post-meta-item-icon">
+      <i class="fa fa-user"></i>
+    </span>
+    <span class="site-uv" title="总访客量">
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+    </span>
+  
+
+  
+    <span class="post-meta-divider">|</span>
+  
+
+  
+    <span class="post-meta-item-icon">
+      <i class="fa fa-eye"></i>
+    </span>
+    <span class="site-pv" title="总访问量">
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.0"></script>
+
+  <script src="/js/motion.js?v=7.1.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.1.0"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.1.0"></script>
+
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.0"></script>
+<script src="/js/post-details.js?v=7.1.0"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.0"></script>
+
+
+  
+
+  
+
+  
+
+  
+  
+
+<script src="//cdn1.lncld.net/static/js/3.11.1/av-min.js"></script>
+
+
+
+<script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+
+<script>
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'zWlHCMwekbEgyjRmAxWLoIR4-gzGzoHsz',
+    appKey: 'LbfEX3cmne22ibHj9hcwButY',
+    placeholder: '欢迎探讨，留下你的邮箱能够收到我的回复喔！',
+    avatar: 'mm',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: '' || 'zh-cn'
+  });
+</script>
+
+
+
+
+  
+
+
+  
+  <script>
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url).replace(/\/{2,}/g, '/');
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x"></i></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x"></i></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+  
+
+
+  
+
+  
+<script>
+if ($('body').find('pre.mermaid').length) {
+  $.ajax({
+    type: 'GET',
+    url: '//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js',
+    dataType: 'script',
+    cache: true,
+    success: function() {
+      mermaid.initialize({
+        theme: 'forest',
+        logLevel: 3,
+        flowchart: { curve: 'linear' },
+        gantt: { axisFormat: '%m/%d/%Y' },
+        sequence: { actorMargin: 50 }
+      });
+    }
+  });
+}
+</script>
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

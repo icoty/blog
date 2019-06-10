@@ -1,0 +1,1813 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2">
+
+<link rel="stylesheet" href="/css/main.css?v=7.1.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.1.0">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.1.0">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=7.1.0" color="#222">
+
+
+
+
+
+
+
+<script id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.1.0',
+    sidebar: {"position":"left","width":240,"display":"always","offset":12,"onmobile":false,"dimmer":false},
+    back2top: true,
+    back2top_sidebar: false,
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="实际工作和开发过程中，网络通信过程中的数据传输和存储大多需要经过严格的加解密设计，比如用户的登陆与注册，敏感信息传输，支付网站和银行的交易信息，甚至为了防止被拖库，数据库的敏感信息存储也需要经过精心的设计。在进行安全设计过程中，或多或少涉及到密码学的一些概念，比如对称加密算法，非对称加密算法(也名公钥算法)，消息认证，Hash函数(也名散列函数或摘要算法)，数字签名(也名指纹或摘要)，流密码等。">
+<meta name="keywords" content="对称加密算法,非对称加密算法&#x2F;公钥算法,Hash函数&#x2F;散列函数&#x2F;摘要函数,消息认证,流密码,数字签名&#x2F;指纹&#x2F;消息摘要">
+<meta property="og:type" content="article">
+<meta property="og:title" content="常用加密算法的应用">
+<meta property="og:url" content="https://icoty.github.io/2019/05/20/crypt/index.html">
+<meta property="og:site_name" content="荒野之萍">
+<meta property="og:description" content="实际工作和开发过程中，网络通信过程中的数据传输和存储大多需要经过严格的加解密设计，比如用户的登陆与注册，敏感信息传输，支付网站和银行的交易信息，甚至为了防止被拖库，数据库的敏感信息存储也需要经过精心的设计。在进行安全设计过程中，或多或少涉及到密码学的一些概念，比如对称加密算法，非对称加密算法(也名公钥算法)，消息认证，Hash函数(也名散列函数或摘要算法)，数字签名(也名指纹或摘要)，流密码等。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-05-23T06:55:41.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="常用加密算法的应用">
+<meta name="twitter:description" content="实际工作和开发过程中，网络通信过程中的数据传输和存储大多需要经过严格的加解密设计，比如用户的登陆与注册，敏感信息传输，支付网站和银行的交易信息，甚至为了防止被拖库，数据库的敏感信息存储也需要经过精心的设计。在进行安全设计过程中，或多或少涉及到密码学的一些概念，比如对称加密算法，非对称加密算法(也名公钥算法)，消息认证，Hash函数(也名散列函数或摘要算法)，数字签名(也名指纹或摘要)，流密码等。">
+
+
+
+  <link rel="alternate" href="/atom.xml" title="荒野之萍" type="application/atom+xml">
+
+
+
+  
+  
+  <link rel="canonical" href="https://icoty.github.io/2019/05/20/crypt/">
+
+
+
+<script id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>常用加密算法的应用 | 荒野之萍</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .motion-element,
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-title { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">荒野之萍</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">忙着活或忙着死</p>
+      
+    
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-首页">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-关于">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-标签">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-分类">
+
+    
+    
+    
+      
+    
+
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+
+      
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>搜索</a>
+        </li>
+      
+    </ul>
+  
+
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+  
+  
+
+  
+
+  <a href="https://github.com/icoty" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="external nofollow noopener noreferrer" target="_blank"><svg width="80" height="80" viewbox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"/><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"/><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"/></svg></a>
+
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://icoty.github.io/2019/05/20/crypt/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="杨宇">
+      <meta itemprop="description" content="后台 / 系统">
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="荒野之萍">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">常用加密算法的应用
+
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2019-05-20 13:58:36" itemprop="dateCreated datePublished" datetime="2019-05-20T13:58:36+00:00">2019-05-20</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2019-05-23 06:55:41" itemprop="dateModified" datetime="2019-05-23T06:55:41+00:00">2019-05-23</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/密码学与信息安全/" itemprop="url" rel="index"><span itemprop="name">密码学与信息安全</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+            
+              
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+            
+                <span class="post-meta-item-text">评论数：</span>
+                <a href="/2019/05/20/crypt/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2019/05/20/crypt/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="post-meta-item-icon">
+            <i class="fa fa-eye"></i>
+             阅读次数： 
+            <span class="busuanzi-value" id="busuanzi_value_page_pv"></span>
+            </span>
+          
+
+          
+            <div class="post-symbolscount">
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">本文字数：</span>
+                
+                <span title="本文字数">8.3k</span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">8 分钟</span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>实际工作和开发过程中，网络通信过程中的数据传输和存储大多需要经过严格的加解密设计，比如用户的登陆与注册，敏感信息传输，支付网站和银行的交易信息，甚至为了防止被拖库，数据库的敏感信息存储也需要经过精心的设计。在进行安全设计过程中，或多或少涉及到密码学的一些概念，比如对称加密算法，非对称加密算法(也名公钥算法)，消息认证，Hash函数(也名散列函数或摘要算法)，数字签名(也名指纹或摘要)，流密码等。</p>
+<p>一直以来，对于这些概念，你是否有一种模棱两可，似懂非懂的感觉？下面咱们一起揭开密码学这层神秘的面纱。</p>
+<h3 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h3><h4 id="密码体制"><a href="#密码体制" class="headerlink" title="密码体制"></a>密码体制</h4><p>密码体制是满足以下5个条件的五元组(P, C, K, E, D)，满足条件: </p>
+<ol>
+<li><p>P(Plaintext)是可能明文的有限集(明文空间); </p>
+</li>
+<li><p>C(Ciphertext)是可能密文的有限集(密文空间); </p>
+</li>
+<li><p>K(Key)是一切可能密钥构成的有限集(密钥空间);</p>
+</li>
+<li><p>E(Encrtption)和D(Decryption)是分别由密钥决定的所有加密算法和解密算法的集合;</p>
+</li>
+<li><p>存在：</p>
+<p> $k \in K$ ,有加密算法 $e_k:P \rightarrow C$ , $e_k \in E$；同时有由 $ {k_1} \in K$ 决定的解密算法 $d_{k_1} : C \rightarrow P，d_{k_1} \in D$；满足关系 $d_{k_1} (e_k(x)) = x, x \in P$。</p>
+</li>
+</ol>
+<h4 id="密码破译"><a href="#密码破译" class="headerlink" title="密码破译"></a>密码破译</h4><p>密码破译根本目的在于破译出密钥或密文，假设破译者Oscar是在已知密码体制的前提下来破译Bob使用的密钥。这个假设被称为Kerckhoff准则，最常见的破解类型有如下5种，从1～5，Oscar的破译难度逐渐降低。</p>
+<ol>
+<li>唯密文攻击：Oscar仅具有密文串c，Oscar只能通过统计特性分析密文串p的规律；</li>
+<li>已知明文攻击：Oscar具有一些明文串p和相应的密文c，{p，c}可以是{P，C}的任意非空子集；</li>
+<li>选择明文攻击：Oscar可获得对加密机的暂时访问，因此他能选择特定明文串p并构造出相应的密文串c；</li>
+<li>选择密文攻击：Oscar可暂时接近解密机，因此他能选择特定密文串c并构造出相应的明文串p。</li>
+<li>选择文本攻击：Oscar可以制造任意明文(p) / 密文(c)并得到对应的密文(c) / 明文(p)。</li>
+</ol>
+<h3 id="加密算法"><a href="#加密算法" class="headerlink" title="加密算法"></a>加密算法</h3><h4 id="对称加密算法"><a href="#对称加密算法" class="headerlink" title="对称加密算法"></a>对称加密算法</h4><p>对称加密算法的加密密钥和解密密钥相同，常见的对称加密算法有：AES、DES、2DES、3DES、RC4、RC5、RC6，Blowfish和IDEA，目前使用最广泛的是DES、AES。</p>
+<pre class="mermaid">graph LR
+A[发送方Bob<br>输入明文P] -->|P|B["发送方Bob与接收方Alice<br>共用相同密钥K<br>加密算法(如DES)<br>C=E(K,P)"];
+B -->|传输密文C|C["接收方Alice与发送方Bob<br>共用相同密钥K<br>解密算法(如DES)<br>P=D(K,C)"];
+C -->|P|D["Alice接收方<br>输出明文P"];</pre>
+
+<h4 id="非对称加密算法-公钥算法"><a href="#非对称加密算法-公钥算法" class="headerlink" title="非对称加密算法(公钥算法)"></a>非对称加密算法(公钥算法)</h4><p>公钥算法的加密算法和解密算法使用不同的密钥，分别为公钥和私钥，这两个密钥中的任何一个都可以用来加密，而另一个用来解密。常见的公钥算法有：椭圆曲线(ECC)、RSA、Diffie-Hellman、El Gamal(安全性建立在基于求解离散对数是困难的)、DSA(适用于数字签名)。</p>
+<h5 id="公钥算法的应用"><a href="#公钥算法的应用" class="headerlink" title="公钥算法的应用"></a>公钥算法的应用</h5><ol>
+<li>发送方Bob用接收方Alice的公钥对消息进行加密，接收方Alice用自己的私钥进行解密，可提供消息传输过程中的保密性。</li>
+</ol>
+<pre class="mermaid">graph LR
+A[Bob<br>输入明文P] -->|P|B["Bob的公钥环{PUalice,……}<br>加密算法<br>C=E(PUalice,P)"];
+B -->|传输密文C|C["Alice私钥PRalice<br>解密算法<br>P=D(PRalice,C)"];
+C -->|P|D["Alice<br>输出明文P"];</pre>
+
+<ol start="2">
+<li>发送方Bob采用自己的私钥对明文进行加密，虽然任何持有Bob公钥的人都能够解密，但是只有拥有Bob私钥的人才能产生密文C，而Bob的私钥只有自己知道，因此密文C也叫做数字签名，数字签名C可用于认证源和数据的完整性。</li>
+</ol>
+<pre class="mermaid">graph LR
+A[Bob<br>输入明文P] -->|P|B["Bob的私钥PRbob<br>加密算法(如RSA)<br>C=E(PRbob,P)"];
+B -->|传输数字签名C|C["Alice的公钥环{PUbob,……}<br>解密算法(如RSA)<br>P=D(PUbob,C)"];
+C -->|P|D["Alice<br>输出明文P"];</pre>
+
+<ol start="3">
+<li>发送方Bob首先采用自己的私钥对明文进行加密，然后使用接收方Alice的公钥再进行一次加密后传输，则既可提供认证功能，又可提供消息传输过程中的保密性。</li>
+</ol>
+<pre class="mermaid">graph LR
+A[Bob<br>输入明文P] -->|P|B["Bob的私钥PRbob<br>加密算法(如RSA)<br>C=E(PRbob,P)"];
+B -->|数字签名C|C["Bob的公钥环{PUalice,……}<br>加密算法(如RSA)<br>C1=E(PUalice,C)"];
+C -->|传输密文C1|D["Alice的私钥PRalice<br>解密算法(如RSA)<br>C=D(PRalice,C1)"];
+D -->|数字签名C|E["Alice的公钥环{PUbob,……}<br>解密算法(如RSA)<br>P=D(PUbob,C)"];
+E -->|P|F["Alice<br>输出明文P"];</pre>
+
+<ol start="4">
+<li>发送方Bob用接收方Alic的公钥对自己的私钥进行加密，然后发送给Alice，Alic用自己的私钥解密即可得到发送方Bob的私钥，从而实现密钥交换功能。</li>
+</ol>
+<pre class="mermaid">graph LR
+A[Bob的私钥<br>PRbob] -->|Bob的私钥PRbob|B["Bob的公钥环{PUalice,……}<br>加密算法(如RSA)<br>C=E(PUalice,PRbob)"];
+B -->|传输密文C|C["Alice的私钥PRalice<br>解密算法(如RSA)<br>PRbob=D(PRalice,C)"];
+C -->|PRbob|D["Alice<br>Bob的私钥PRbob"];</pre>
+
+<p>另外需要说明一下，Diffie-Hellman的密钥交换算法与此方法不同，如果你学过密码学，应该清楚其中的差异。并且并不是所有的公钥算法都支持加密/解密、数字签名和密钥交换功能，有的公钥算法只支持其中的一种或两种，下表列出部分公钥算法锁支持的应用。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">算法</th>
+<th style="text-align:center">加密/解密</th>
+<th style="text-align:center">数字签名</th>
+<th style="text-align:center">密钥交换</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">RSA<br>安全性建立在基于大素数分解是困难的</td>
+<td style="text-align:center">Y</td>
+<td style="text-align:center">Y</td>
+<td style="text-align:center">Y</td>
+</tr>
+<tr>
+<td style="text-align:center">椭圆曲线/ECC<br>安全性建立在椭圆曲线对数问题之上<br>(即由kP和P确定k是困难的)</td>
+<td style="text-align:center">Y</td>
+<td style="text-align:center">Y</td>
+<td style="text-align:center">Y</td>
+</tr>
+<tr>
+<td style="text-align:center">Diff-Hellman<br>安全性建立在计算离散对数是很困难的</td>
+<td style="text-align:center">N</td>
+<td style="text-align:center">Y</td>
+<td style="text-align:center">Y</td>
+</tr>
+<tr>
+<td style="text-align:center">DSS</td>
+<td style="text-align:center">N</td>
+<td style="text-align:center">Y</td>
+<td style="text-align:center">N</td>
+</tr>
+</tbody>
+</table>
+<h4 id="Hash函数-散列函数或摘要函数"><a href="#Hash函数-散列函数或摘要函数" class="headerlink" title="Hash函数(散列函数或摘要函数)"></a>Hash函数(散列函数或摘要函数)</h4><p>Hash函数将可变长度的消息映射为固定长度的<strong>Hash值</strong>或<strong>消息摘要</strong>，常见的Hash算法有：MD2、MD4、MD5、SHA-1、SHA-224、SHA-256、SHA-384、SHA-512、HAVAL、HMAC、HMAC-MD5、HMAC-SHA1。对于给定的密码学Hash函数y=Hash(x)，要求如下两种情况再计算上不可行：</p>
+<ol>
+<li>对给定的y，找到对应的x；</li>
+<li>找到两个不同的x1和x2，使得Hash(x1)=Hash(x2)，具有抗碰撞性的特点。</li>
+</ol>
+<h5 id="Hash函数的应用"><a href="#Hash函数的应用" class="headerlink" title="Hash函数的应用"></a>Hash函数的应用</h5><ol>
+<li><strong>消息认证</strong>是用来验证消息完整性的一种机制或服务，消息认证确认收到的数据确实和发送时的一样(即<strong>防篡改</strong>)，并且还要确保发送方的身份是真实有效的的(即<strong>防冒充</strong>)。下图以对称加密算法为例，因为对称密钥K只有Bob和Alice才有，保证了发送方的合法有效性，同时比较C3与C是否相等，可以确定传输过程中是否被篡改过。</li>
+</ol>
+<pre class="mermaid">graph LR
+A[Bob<br>输入明文P] -->|P|B["Bob<br>Hash函数<br>(如sha256)<br>C=Hash(P)"];
+B -->|C|C["Bob<br>C1=P||C"];
+A -->|P|C;
+C -->|"C1=P||C"|D["Bob和Alice公用的密钥K<br>对称加密算法(如DES)<br>C2=E(K,C1)"];
+D -->|传输密文C2|E["Alice和Bob公用的密钥K<br>对称解密算法(如DES)<br>C1=D(K,C2)"];
+E -->|"C1=P||C"|F["Alice<br>1.Hash函数(如sha256)<br>C3=Hash(P)<br>2.比较C3与C是否相等"];</pre>
+
+<ol start="2">
+<li><p><strong>数字签名(也名指纹或摘要)</strong>是一种认证机制，它使得消息的产生者可以添加一个起签名作用的码字，通过计算消息的Hash值并用产生者的私钥加密Hash值来生成签名，签名保证了消息和来源和完整性。下图最后一步比较C3与C如果不相等，认证失败，该图没有提供保密性，因为传输过程中只是将P和C1简单的连接在一起，并没有对C2进行加密，如果需要提供保密性，可以使用Alic的私钥对C2加密后再传输。</p>
+<pre class="mermaid">graph LR
+A[Bob<br>输入明文P] -->|P|B["Bob<br>Hash函数<br>(如sha256)<br>C=Hash(P)"];
+B -->|C|C["Bob的私钥PRbob<br>加密算法(如RSA)<br>C1=E(PRbob,C)"];
+C -->|C1|D["Bob<br>C2=P||C1"];
+A -->|P|D;
+D -->|传输C2|E["Alice的公钥环{PUbob,……}<br>1.解密算法(如RSA)<br>C=D(PUbob,C1)<br>2.Hash函数(如sha256)<br>C3=Hash(P)<br>3.比较C3与C是否相等"];</pre>
+</li>
+<li><p>用于产生单向口令文件，比如操作系统存储的都是口令的Hah值而不是口令本身，当用户输入口令时，计算其Hash值和之前存储的口令比对，这样即使操作系统被黑之后，也能保证用户口令的安全性。同样适用于入侵检测和病毒检测，如将你需要保护的文件的Hash值存储到安全系统中(比如只读设备中，不可修改也不可删除)，这样病毒入侵后只能修改文件而不能修改Hash值，于是可以通过重新计算文件的Hash值和之前保存的Hash值比对。</p>
+</li>
+</ol>
+<h3 id="加密方式"><a href="#加密方式" class="headerlink" title="加密方式"></a>加密方式</h3><h4 id="流密码"><a href="#流密码" class="headerlink" title="流密码"></a>流密码</h4><p>典型的流密码是每次加密一个字节的密文，加密长度可以按需求设计，比如每次只加密一位或者大于一个字节的单元都行。实质上$Ci=Pi \oplus K1i，Pi=Ci \oplus K2i$，就是简单的异或，加密异或一次，解密再异或一次，即可恢复明文字节流。</p>
+<pre class="mermaid">graph LR
+A["Bob<br>明文字节流P1~Pn"] -->|"P1~Pn"|C["Bob<br>加密函数<br>Ci=E(K1i,Pi)"];
+B["Bob 由密钥K1控制的<br>密钥流发生器K11～K1n<br>其中K1i=K2i"] -->|"K11～K1n"|C;
+C -->|"传输密文C1～Cn"|E["Alice<br>解密函数<br>Pi=D(K2i,Ci)"];
+D["Alice 由密钥K2控制的<br>密钥流发生器K21～K2n<br>其中K1i=K2i"] -->|"K21～K2n"|E;
+E -->|"明文字节流P1～Pn"|F["Alice<br>明文字节流P1~Pn"];</pre>
+
+<h3 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h3><p><a href="https://math.meta.stackexchange.com/questions/5020/mathjax-basic-tutorial-and-quick-reference/5044%20MathJax%20basic%20tutorial%20and%20quick%20reference" rel="external nofollow noopener noreferrer" target="_blank">MathJax语法规则</a><br><a href="https://www.jianshu.com/p/7ddbb7dc8fec" rel="external nofollow noopener noreferrer" target="_blank">Mermaid语法规则</a><br><a href="https://mermaidjs.github.io/demos.html" rel="external nofollow noopener noreferrer" target="_blank">Mermaid官方教程</a><br><a href="https://github.com/webappdevelp/hexo-filter-mermaid-diagrams" rel="external nofollow noopener noreferrer" target="_blank">Mermaid Github仓库</a><br><a href="https://github.com/mathjax/MathJax" rel="external nofollow noopener noreferrer" target="_blank">MathJax Github仓库</a><br><a href="https://www.cnblogs.com/colife/p/5566789.html" rel="external nofollow noopener noreferrer" target="_blank">常用加密算法概述</a><br><a href="https://blog.csdn.net/u011779724/article/details/80776776" rel="external nofollow noopener noreferrer" target="_blank">HTTPS建立过程</a></p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+    <div>
+     
+        <div>
+    
+        <div style="text-align:center;color: #ccc;font-size:14px;">-------------本文结束<i class="fa fa-paw"></i>感谢您的阅读-------------</div>
+    
+</div>
+
+      
+    </div>
+
+    <div>
+      
+        
+<div class="my_post_copyright">
+  <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+  <!-- JS库 sweetalert 可修改路径 -->
+  <script src="https://cdn.bootcss.com/jquery/2.0.0/jquery.min.js"></script>
+  <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+  <p><span>本文标题:</span><a href="/2019/05/20/crypt/">常用加密算法的应用</a></p>
+  <p><span>文章作者:</span><a href="/" title="访问 杨宇 的个人博客">杨宇</a></p>
+  <p><span>发布时间:</span>2019年05月20日 - 13:05</p>
+  <p><span>最后更新:</span>2019年05月23日 - 06:05</p>
+  <p><span>原始链接:</span><a href="/2019/05/20/crypt/" title="常用加密算法的应用">https://icoty.github.io/2019/05/20/crypt/</a>
+    <span class="copy-path" title="点击复制文章链接"><i class="fa fa-clipboard" data-clipboard-text="https://icoty.github.io/2019/05/20/crypt/" aria-label="复制成功！"></i></span>
+  </p>
+  <p><span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="external nofollow noopener noreferrer" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">署名-非商业性使用-禁止演绎 4.0 国际</a> 转载请保留原文链接及作者。</p>
+</div>
+<script>
+    var clipboard = new Clipboard('.fa-clipboard');
+    $(".fa-clipboard").click(function(){
+      clipboard.on('success', function(){
+        swal({
+          title: "",
+          text: '复制成功',
+          icon: "success",
+          showConfirmButton: true
+          });
+    });
+    });
+</script>
+
+
+      
+    </div>
+
+    
+
+    
+      
+    
+    
+      <div>
+        <div id="reward-container">
+  <div>打赏狗粮！</div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+
+    
+      
+      
+        
+      
+      <div style="display: inline-block">
+        <img src="/images/wechatpay.jpg" alt="杨宇 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+      
+      
+        
+      
+      <div style="display: inline-block">
+        <img src="/images/alipay.jpg" alt="杨宇 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/对称加密算法/" rel="tag"><i class="fa fa-tag"></i> 对称加密算法</a>
+          
+            <a href="/tags/非对称加密算法-公钥算法/" rel="tag"><i class="fa fa-tag"></i> 非对称加密算法/公钥算法</a>
+          
+            <a href="/tags/Hash函数-散列函数-摘要函数/" rel="tag"><i class="fa fa-tag"></i> Hash函数/散列函数/摘要函数</a>
+          
+            <a href="/tags/消息认证/" rel="tag"><i class="fa fa-tag"></i> 消息认证</a>
+          
+            <a href="/tags/流密码/" rel="tag"><i class="fa fa-tag"></i> 流密码</a>
+          
+            <a href="/tags/数字签名-指纹-消息摘要/" rel="tag"><i class="fa fa-tag"></i> 数字签名/指纹/消息摘要</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/14/nachos-3-4-Lab3/" rel="next" title="Nachos-Lab3-同步与互斥机制模块实现">
+                <i class="fa fa-chevron-left"></i> Nachos-Lab3-同步与互斥机制模块实现
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/05/23/markdown-mermaid-mathjax/" rel="prev" title="Hexo引入Mermaid流程图和MathJax数学公式">
+                Hexo引入Mermaid流程图和MathJax数学公式 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/header.jpg" alt="杨宇">
+            
+              <p class="site-author-name" itemprop="name">杨宇</p>
+              <div class="site-description motion-element" itemprop="description">后台 / 系统</div>
+          </div>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives">
+                
+                    <span class="site-state-item-count">17</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  
+                    
+                      <a href="/categories/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">15</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  
+                    
+                      <a href="/tags/">
+                    
+                  
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">55</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://github.com/icoty" title="GitHub &rarr; https://github.com/icoty" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://www.cnblogs.com/icoty23" title="博客园 &rarr; https://www.cnblogs.com/icoty23" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-spinner"></i>博客园</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="https://blog.csdn.net/qq_36347375" title="CSDN &rarr; https://blog.csdn.net/qq_36347375" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-copyright"></i>CSDN</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  
+                  
+                    
+                  
+                  
+                    
+                  
+                  <a href="mailto:icoty.yangy@gmail.com" title="E-mail &rarr; mailto:icoty.yangy@gmail.com" rel="external nofollow noopener noreferrer" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-mail</a>
+                </span>
+              
+            </div>
+          
+
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-block">
+              <div class="links-of-blogroll-title">
+                <i class="fa  fa-fw fa-link"></i>
+                友链
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://laibh.top" title="http://laibh.top" rel="external nofollow noopener noreferrer" target="_blank">赖同学</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+            
+          
+          
+
+        </div>
+      </div>
+
+      
+      <!--noindex-->
+        <div class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#基本概念"><span class="nav-number">1.</span> <span class="nav-text">基本概念</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#密码体制"><span class="nav-number">1.1.</span> <span class="nav-text">密码体制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#密码破译"><span class="nav-number">1.2.</span> <span class="nav-text">密码破译</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#加密算法"><span class="nav-number">2.</span> <span class="nav-text">加密算法</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#对称加密算法"><span class="nav-number">2.1.</span> <span class="nav-text">对称加密算法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#非对称加密算法-公钥算法"><span class="nav-number">2.2.</span> <span class="nav-text">非对称加密算法(公钥算法)</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#公钥算法的应用"><span class="nav-number">2.2.1.</span> <span class="nav-text">公钥算法的应用</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Hash函数-散列函数或摘要函数"><span class="nav-number">2.3.</span> <span class="nav-text">Hash函数(散列函数或摘要函数)</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Hash函数的应用"><span class="nav-number">2.3.1.</span> <span class="nav-text">Hash函数的应用</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#加密方式"><span class="nav-number">3.</span> <span class="nav-text">加密方式</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#流密码"><span class="nav-number">3.1.</span> <span class="nav-text">流密码</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考文献"><span class="nav-number">4.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
+            
+
+          </div>
+        </div>
+      <!--/noindex-->
+      
+
+      
+
+      <iframe frameborder="no" border="0" marginwidth="0" marginheight="20" width="270" height="42" src="//music.163.com/outchain/player?type=0&id=2768835095&auto=0&height=32"></iframe>
+
+    </div>
+  </aside>
+  
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-heart" aria-hidden="true"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">杨宇</span>
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    
+      <span class="post-meta-item-text">站点总字数：</span>
+    
+    <span title="站点总字数">165k</span>
+  
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    
+    <span title="站点阅读时长">2:30</span>
+  
+</div>
+
+
+
+
+
+
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="post-meta-item-icon">
+      <i class="fa fa-user"></i>
+    </span>
+    <span class="site-uv" title="总访客量">
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+    </span>
+  
+
+  
+    <span class="post-meta-divider">|</span>
+  
+
+  
+    <span class="post-meta-item-icon">
+      <i class="fa fa-eye"></i>
+    </span>
+    <span class="site-pv" title="总访问量">
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+    
+
+    
+  </div>
+
+  
+
+<script>
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+
+  
+
+
+  <script src="/js/utils.js?v=7.1.0"></script>
+
+  <script src="/js/motion.js?v=7.1.0"></script>
+
+
+
+  
+  
+
+
+  <script src="/js/affix.js?v=7.1.0"></script>
+
+  <script src="/js/schemes/pisces.js?v=7.1.0"></script>
+
+
+
+
+  
+  <script src="/js/scrollspy.js?v=7.1.0"></script>
+<script src="/js/post-details.js?v=7.1.0"></script>
+
+
+
+  
+
+
+  <script src="/js/next-boot.js?v=7.1.0"></script>
+
+
+  
+
+  
+
+  
+
+  
+  
+
+<script src="//cdn1.lncld.net/static/js/3.11.1/av-min.js"></script>
+
+
+
+<script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+
+<script>
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'zWlHCMwekbEgyjRmAxWLoIR4-gzGzoHsz',
+    appKey: 'LbfEX3cmne22ibHj9hcwButY',
+    placeholder: '欢迎探讨，留下你的邮箱能够收到我的回复喔！',
+    avatar: 'mm',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: '' || 'zh-cn'
+  });
+</script>
+
+
+
+
+  
+
+
+  
+  <script>
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url).replace(/\/{2,}/g, '/');
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x"></i></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x"></i></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+  
+
+  
+  
+
+  
+    
+      <script type="text/x-mathjax-config">
+  
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') { next = next.nextSibling }
+        if (next && next.nodeName.toLowerCase() === 'br') { next.parentNode.removeChild(next) }
+      }
+    });
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      document.getElementById(all[i].inputID + '-Frame').parentNode.className += ' has-jax';
+    }
+  });
+</script>
+<script src="//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+    
+  
+
+
+  
+
+  
+<script>
+if ($('body').find('pre.mermaid').length) {
+  $.ajax({
+    type: 'GET',
+    url: '//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js',
+    dataType: 'script',
+    cache: true,
+    success: function() {
+      mermaid.initialize({
+        theme: 'forest',
+        logLevel: 3,
+        flowchart: { curve: 'linear' },
+        gantt: { axisFormat: '%m/%d/%Y' },
+        sequence: { actorMargin: 50 }
+      });
+    }
+  });
+}
+</script>
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
